@@ -4,7 +4,10 @@ package main
 import (
 	"fmt"
 	"os"
+	"path/filepath"
+	"strings"
 
+	"github.com/stellitecoin/libznipfs/src/ipfs"
 	"github.com/stellitecoin/libznipfs/src/zeronet"
 )
 
@@ -13,7 +16,9 @@ func main() {
 
 	fmt.Println("Test libznipfs as executable")
 
-	zn, err := zeronet.New("/tmp/zn-test")
+	baseDataPath := "/tmp"
+
+	zn, err := zeronet.New(filepath.Join(baseDataPath, "zn-test"))
 	if err != nil {
 		fmt.Printf("Unable to create ZeroNet instance: %s\n", err)
 		os.Exit(1)
@@ -27,5 +32,29 @@ func main() {
 		os.Exit(1)
 	}
 
-	fmt.Println(string(content))
+	// The content retrieved from ZeroNet is the IPFS hash containing the nodelist
+	ipfsHash := strings.TrimSpace(string(content))
+	fmt.Printf("Get IPFS hash from ZeroNet: %s\n", ipfsHash)
+
+	ipfsNode, err := ipfs.New(filepath.Join(baseDataPath, "ipfs-test"))
+	if err != nil {
+		fmt.Printf("Unable to create IPFS node: %s\n", err)
+		os.Exit(1)
+	}
+
+	err = ipfsNode.Start(5001)
+	if err != nil {
+		fmt.Printf("Unable to start IPFS node: %s\n", err)
+		os.Exit(1)
+	}
+
+	data, err := ipfsNode.Get(ipfsHash)
+	if err != nil {
+		fmt.Printf("Unable fetch data from IPFS node: %s\n", err)
+		os.Exit(1)
+	}
+
+	fmt.Println("Retrieved from IPFS")
+	fmt.Println(string(data))
+	ipfsNode.Stop()
 }
