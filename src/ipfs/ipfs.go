@@ -41,6 +41,7 @@ func New(dataPath string) (*IPFS, error) {
 
 	log.SetLevel(log.ErrorLevel)
 	log.SetOutput(ioutil.Discard)
+	os.MkdirAll(dataPath, 0744)
 
 	// TODO: Check if the descriptor limit need to be increases
 	// if err := utilmain.ManageFdLimit(); err != nil {
@@ -59,7 +60,7 @@ func New(dataPath string) (*IPFS, error) {
 
 	// Initialize the IPFS node's defaults
 	if !fsrepo.IsInitialized(instance.configPath) {
-		err := instance.initNode(os.Stdout, instance.configPath)
+		err := instance.initNode(ioutil.Discard, instance.configPath)
 		if err != nil {
 			panic(err)
 		}
