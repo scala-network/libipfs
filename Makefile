@@ -17,17 +17,17 @@ build_test_linux:
 build_linux:
 	GOOS=linux \
 	GOARCH=amd64 \
-	go build -buildmode=c-archive -o ./bin/libznipfs.a libznipfs.go
+	go build -buildmode=c-archive -o ./bin/libznipfs.a ./src/libznipfs.go
 
 build_windows:
 	GOOS=windows \
 	GOARCH=amd64 \
-	go build -buildmode=c-archive -o ./bin/libznipfs.a libznipfs.go
+	go build -buildmode=c-archive -o ./bin/libznipfs.a ./src/libznipfs.go
 
 build_macos:
 	GOOS=darwin \
 	GOARCH=amd64 \
-	go build -buildmode=c-archive -o ./bin/libznipfs.a libznipfs.go
+	go build -buildmode=c-archive -o ./bin/libznipfs.a ./src/libznipfs.go
 
 build: build_linux \
 	build_windows \

@@ -25,7 +25,7 @@ func main() {
 	}
 
 	fmt.Println("Fetching file from ZeroNet")
-	// This is a well-known ZeroNet address. We store the IPFS hash in ipfs.has
+	// This is a well-known ZeroNet address. We store the IPFS hash in ipfs.hash
 	content, err := zn.GetFile("1FAiQ7MddvavaRF6b47fPEY4nSBVJUbCXf", "ipfs.hash")
 	if err != nil {
 		fmt.Printf("Unable fetch from ZeroNet: %s\n", err)
