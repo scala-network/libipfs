@@ -15,7 +15,7 @@ is running.
 To use the API, you need to set the IPFS path to your Stellite data directory
 
 Example:
-`IPFS_PATH=/home/user/.stellite/ipfs ipfs cat /ipfs/QmS4ustL54uo8FzR9455qaxZwuMiUhyvMcX9Ba8nUH4uVv/readme`
+`IPFS_PATH=~/.stellite/ipfs ipfs cat /ipfs/QmS4ustL54uo8FzR9455qaxZwuMiUhyvMcX9Ba8nUH4uVv/readme`
 
 This will print the default IPFS readme
 

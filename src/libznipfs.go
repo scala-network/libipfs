@@ -28,8 +28,8 @@ func main() {
  * daemon down
  */
 
-//export StartNode
-func StartNode(dataPath *C.char) {
+//export ZNIPFSStartNode
+func ZNIPFSStartNode(dataPath *C.char) {
 	// Start the ZN/IPFS node
 
 	var err error
@@ -54,8 +54,8 @@ func StartNode(dataPath *C.char) {
 	}
 }
 
-//export GetSeedList
-func GetSeedList(zeroNetAddress *C.char) *C.char {
+//export ZNIPFSGetSeedList
+func ZNIPFSGetSeedList(zeroNetAddress *C.char) *C.char {
 	// GetSeedList Retrieve the seedlist using ZeroNet and IPFS
 	// Returns the address list from the given ZeroNet address
 
@@ -78,8 +78,8 @@ func GetSeedList(zeroNetAddress *C.char) *C.char {
 	return C.CString(string(data))
 }
 
-//export StopNode
-func StopNode() {
+//export ZNIPFSStopNode
+func ZNIPFSStopNode() {
 	// Stop the ZN/IPFS node
 	ipfsNode.Stop()
 }

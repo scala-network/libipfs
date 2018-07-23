@@ -142,8 +142,10 @@ func (ipfs *IPFS) Start(apiPort int) error {
 	go func() {
 		err := corehttp.Serve(node, manet.NetListener(apiLis), opts...)
 		// TODO: Find a better way to pass errors back
-		fmt.Printf("An API error occurred: %s\n", err)
-		panic(err)
+		if err != nil {
+			fmt.Printf("An API error occurred: %s\n", err)
+			panic(err)
+		}
 	}()
 	return nil
 }
