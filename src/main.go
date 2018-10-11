@@ -24,9 +24,13 @@ func main() {
 		os.Exit(1)
 	}
 
-	fmt.Println("Fetching file from ZeroNet")
+	// ZeroNet address 1KvWEyqhyHsU9y6UT8xYCFDC8Y1vKaNueX - Live JSON
+	// ZeroNet address 1CH9ApTd83RM8ggz35pZApnKoZqDf7wXyh - Testnet JSON
+	znAddress := "1KvWEyqhyHsU9y6UT8xYCFDC8Y1vKaNueX"
+
+	fmt.Println("Fetching file from ZeroNet:", znAddress)
 	// This is a well-known ZeroNet address. We store the IPFS hash in ipfs.hash
-	content, err := zn.GetFile("1FAiQ7MddvavaRF6b47fPEY4nSBVJUbCXf", "ipfs.hash")
+	content, err := zn.GetFile(znAddress, "ipfs.hash")
 	if err != nil {
 		fmt.Printf("Unable fetch from ZeroNet: %s\n", err)
 		os.Exit(1)
