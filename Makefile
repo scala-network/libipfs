@@ -4,7 +4,7 @@
 
 .PHONY: default build fmt lint run run_race test clean vet docker_build docker_run docker_clean
 
-APP_NAME := liznipfs
+APP_NAME := libznipfs
 
 default: build
 
