@@ -29,6 +29,8 @@ Note: It's easier to get your environment set up for building Stellite before st
 
 ### Linux and MacOS
 
+*Note on building: Current go-ipfs master seems broken, for now, use v0.4.17*
+
 1. [Download](https://golang.org/dl/) and [install](https://golang.org/doc/install#tarball) Go 1.10 or higher
 2. Set you GOPATH, or have it default to ~/go
 3. Get and install the [Go IPFS source](https://github.com/ipfs/go-ipfs#build-from-source)

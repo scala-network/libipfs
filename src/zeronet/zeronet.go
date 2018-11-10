@@ -1,8 +1,10 @@
 package zeronet
 
 import (
+	"errors"
 	"io/ioutil"
 	"os"
+	"sync"
 
 	"github.com/donovansolms/ZeroGo/site_manager"
 	"github.com/donovansolms/ZeroGo/utils"
@@ -12,6 +14,7 @@ import (
 
 // ZeroNet contains the functionality to communicate with ZeroNet
 type ZeroNet struct {
+	mutex       sync.Mutex
 	dataPath    string
 	siteManager *site_manager.SiteManager
 }
@@ -44,9 +47,17 @@ func (zn *ZeroNet) GetFile(address string, filename string) ([]byte, error) {
 	os.MkdirAll(utils.GetDataPath(), 0744)
 	utils.CreateCerts()
 
+	// NOTE: We remove the site for the site to sync correctly. The ZeroGo lib
+	// doesn't yet implement the ZeroNet update protocol, once implemented, the
+	// site will update itselt
+	zn.siteManager.Remove(address)
+
 	// Fetch the site from ZeroNet and wait for the operation to complete
 	site := zn.siteManager.Get(address)
-	site.Wait()
+	done := site.Wait()
+	if !done {
+		return []byte{}, errors.New("Timeout!!!")
+	}
 
 	// Get the specified file from the ZeroNet address
 	data, err := site.GetFile(filename)

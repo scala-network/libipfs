@@ -41,5 +41,10 @@ run: build_test_linux
 	LOG_LEVEL=Debug \
 	./bin/${APP_NAME}-linux-test
 
+run_race:
+	GOOS=linux \
+	GOARCH=amd64 \
+	go run -race ./src/main.go
+
 clean:
 	rm ./bin/*
