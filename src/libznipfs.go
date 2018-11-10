@@ -5,8 +5,13 @@ import "C"
 import (
 	"encoding/json"
 	"fmt"
+	"os"
 	"path/filepath"
+	"sort"
+	"strconv"
 	"strings"
+	"sync"
+	"time"
 
 	"github.com/stellitecoin/libznipfs/src/ipfs"
 	"github.com/stellitecoin/libznipfs/src/zeronet"
@@ -14,6 +19,8 @@ import (
 
 var zn *zeronet.ZeroNet
 var ipfsNode *ipfs.IPFS
+var checkpoints map[int]string
+var checkpointMutex sync.RWMutex
 
 // Result holds the seedlist and any error that occurred in the process
 // for the daemon to use
@@ -37,8 +44,8 @@ func main() {
  * Here we only have 3 exported functions that can be called from C
  */
 
-//export ZNIPFSStartNode
-func ZNIPFSStartNode(dataPath *C.char) *C.char {
+//export IPFSStartNode
+func IPFSStartNode(dataPath *C.char) *C.char {
 	// Start the ZN/IPFS node
 	ipfsPort := 5001
 	// result is marshalled to JSON before being returned to the daemon
@@ -129,10 +136,118 @@ func ZNIPFSGetSeedList(zeroNetAddress *C.char) (resultJSON *C.char) {
 	return
 }
 
-//export ZNIPFSStopNode
-func ZNIPFSStopNode() {
+//export IPFSStopNode
+func IPFSStopNode() {
 	// Stop the ZN/IPFS node
 	ipfsNode.Stop()
+}
+
+//export ZNStartCheckpointCollection
+// ZNStartCheckpointCollection starts watching for new checkpoints
+func ZNStartCheckpointCollection(
+	dataPathC *C.char,
+	checkpointZeroNetAddressC *C.char,
+) {
+	dataPath := C.GoString(dataPathC)
+	checkpointZeroNetAddress := C.GoString(checkpointZeroNetAddressC)
+	fmt.Printf("Start checking for checkpoints at %s (path:%s)\n", checkpointZeroNetAddress, dataPath)
+	go checkpointFetchLoop(checkpointZeroNetAddress,
+		dataPath,
+		10,             // Hold at most 10 checkpoints
+		time.Second*20, // Check for a new checkpoint every 20 seconds
+	)
+}
+
+//export ZNGetCheckpointAt
+// GetCheckpoint returns the checkpoint for the requested height. We only keep
+// the last 10 checkpoints since start and return a blank if the checkpoint was
+// not found
+func ZNGetCheckpointAt(heightC C.int) *C.char {
+
+	height := int(heightC)
+	fmt.Printf("ZeroNet: Getting checkpoint at height: %d\n", height)
+
+	checkpointMutex.RLock()
+	defer checkpointMutex.RUnlock()
+	if hash, ok := checkpoints[height]; ok {
+		fmt.Printf("ZeroNet: Checkpoint available at height %d: %s\n", height, hash)
+		return C.CString(hash)
+	}
+	return C.CString("")
+}
+
+// checkpointFetchLoop will fetch the latest checkpoint from ZeroNet at a
+// specified interval and store it in checkpoints for easy daemon retrieval
+//
+// We do this in an async manner because fetching from ZeroNet can take 2+
+// seconds. Doing synchronous fetches would halt the daemon for a few seconds.
+func checkpointFetchLoop(
+	checkpointsZeroNetAddress string,
+	baseDataPath string,
+	maxCheckpoints int,
+	interval time.Duration) {
+	zn, err := zeronet.New(filepath.Join(baseDataPath, "zn-checkpoints"))
+	if err != nil {
+		fmt.Printf("ZeroNet: Unable to create ZeroNet instance: %s\n", err)
+		os.Exit(1)
+	}
+
+	var height int
+	var checkpointInfo []string
+	var checkpointCount int
+	checkpoints = make(map[int]string)
+
+	for {
+		fmt.Println("ZeroNet: Fetching file:", checkpointsZeroNetAddress)
+		content, err := zn.GetFile(checkpointsZeroNetAddress, "index.html")
+		if err != nil {
+			// If we could not fetch from ZeroNet, try again later
+			fmt.Printf("ZeroNet: Unable fetch from ZeroNet: %s\n", err)
+			goto sleep
+		}
+		// Checkpoints are in the format `height:hash`
+		checkpointInfo = strings.Split(string(content), ":")
+		if len(checkpointInfo) != 2 {
+			fmt.Println("ZeroNet: Checkpoint info is in an incorrect format")
+			goto sleep
+		}
+
+		height, err = strconv.Atoi(checkpointInfo[0])
+		if err != nil {
+			fmt.Println("ZeroNet: Height from checkpoint is not a number")
+			goto sleep
+		}
+
+		checkpointMutex.Lock()
+		if _, ok := checkpoints[height]; ok {
+			checkpointMutex.Unlock()
+			// We already have this checkpoint, wait for the next one
+			goto sleep
+		}
+
+		// Ass the new checkpoint
+		checkpoints[height] = checkpointInfo[1]
+		checkpointCount = len(checkpoints)
+		// If we have too many checkpoints, remove the oldest one
+		if checkpointCount > maxCheckpoints {
+			// Go maps are randomised at runtime, we need to sort it and remove
+			// the smaller one
+			var keys []int
+			for k := range checkpoints {
+				keys = append(keys, k)
+			}
+			sort.Ints(keys)
+			delete(checkpoints, keys[0])
+		}
+		fmt.Printf("ZeroNet: Cached new checkpoint at height %d with hash %s. Total checkpoints: %d\n",
+			height,
+			checkpointInfo[1],
+			len(checkpoints))
+		checkpointMutex.Unlock()
+
+	sleep:
+		time.Sleep(interval)
+	}
 }
 
 // toCJSONString marshals the error result into JSON for the daemon to

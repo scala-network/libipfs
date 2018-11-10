@@ -9,6 +9,8 @@ import (
 
 	"github.com/stellitecoin/libznipfs/src/ipfs"
 	"github.com/stellitecoin/libznipfs/src/zeronet"
+	//"github.com/stellitecoin/libznipfs/src/ipfs"
+	//"github.com/stellitecoin/libznipfs/src/zeronet"
 )
 
 // main runs libznipfs and retrieves test data from ZeroNet and IPFS
