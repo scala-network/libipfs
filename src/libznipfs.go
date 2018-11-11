@@ -170,7 +170,6 @@ func ZNGetCheckpointAt(heightC C.int) *C.char {
 	checkpointMutex.RLock()
 	defer checkpointMutex.RUnlock()
 	if hash, ok := checkpoints[height]; ok {
-		fmt.Printf("ZeroNet: Checkpoint available at height %d: %s\n", height, hash)
 		return C.CString(hash)
 	}
 	return C.CString("")
@@ -198,11 +197,10 @@ func checkpointFetchLoop(
 	checkpoints = make(map[int]string)
 
 	for {
-		fmt.Println("ZeroNet: Fetching file:", checkpointsZeroNetAddress)
 		content, err := zn.GetFile(checkpointsZeroNetAddress, "index.html")
 		if err != nil {
 			// If we could not fetch from ZeroNet, try again later
-			fmt.Printf("ZeroNet: Unable fetch from ZeroNet: %s\n", err)
+			// fmt.Printf("ZeroNet: Unable fetch from ZeroNet: %s\n", err)
 			goto sleep
 		}
 		// Checkpoints are in the format `height:hash`
@@ -239,7 +237,7 @@ func checkpointFetchLoop(
 			sort.Ints(keys)
 			delete(checkpoints, keys[0])
 		}
-		fmt.Printf("ZeroNet: Cached new checkpoint at height %d with hash %s. Total checkpoints: %d\n",
+		fmt.Printf("ZeroNet: Cached new checkpoint at height %d with hash %s. Total cached checkpoints: %d\n",
 			height,
 			checkpointInfo[1],
 			len(checkpoints))
