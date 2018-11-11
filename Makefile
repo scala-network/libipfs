@@ -18,19 +18,20 @@ build_linux:
 	CGO_ENABLED=1 \
 	GOOS=linux \
 	GOARCH=amd64 \
-	go build -buildmode=c-archive -o ./bin/libznipfs.a ./src/libznipfs.go
+	go build -buildmode=c-archive -o ./bin/libznipfs-linux.a ./src/libznipfs.go
 
 build_windows:
 	CGO_ENABLED=1 \
 	GOOS=windows \
 	GOARCH=amd64 \
-	go build -buildmode=c-archive -o ./bin/libznipfs.a ./src/libznipfs.go
+	CC=x86_64-w64-mingw32-gcc \
+	go build -buildmode=c-archive -o ./bin/libznipfs-windows.a ./src/libznipfs.go
 
 build_macos:
 	CGO_ENABLED=1 \
 	GOOS=darwin \
 	GOARCH=amd64 \
-	go build -buildmode=c-archive -o ./bin/libznipfs.a ./src/libznipfs.go
+	go build -buildmode=c-archive -o ./bin/libznipfs-mac.a ./src/libznipfs.go
 
 build: build_linux \
 	build_windows \
