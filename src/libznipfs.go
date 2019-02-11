@@ -20,7 +20,7 @@ import (
 var zn *zeronet.ZeroNet
 var ipfsNode *ipfs.IPFS
 var checkpoints map[int]string
-var checkpointMutex sync.RWMutex
+var checkpointMutex sync.Mutex
 
 // Result holds the seedlist and any error that occurred in the process
 // for the daemon to use
@@ -154,7 +154,7 @@ func ZNStartCheckpointCollection(
 	go checkpointFetchLoop(checkpointZeroNetAddress,
 		dataPath,
 		10,             // Hold at most 10 checkpoints
-		time.Second*20, // Check for a new checkpoint every 20 seconds
+		time.Second*30, // Check for a new checkpoint every 30 seconds (as test)
 	)
 }
 
@@ -167,8 +167,10 @@ func ZNGetCheckpointAt(heightC C.int) *C.char {
 	height := int(heightC)
 	fmt.Printf("ZeroNet: Getting checkpoint at height: %d\n", height)
 
-	checkpointMutex.RLock()
-	defer checkpointMutex.RUnlock()
+	checkpointMutex.Lock()
+	defer func() {
+		checkpointMutex.Unlock()
+	}()
 	if hash, ok := checkpoints[height]; ok {
 		return C.CString(hash)
 	}
