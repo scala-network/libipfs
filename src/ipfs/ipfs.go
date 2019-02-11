@@ -76,13 +76,19 @@ func New(dataPath string) (*IPFS, error) {
 				instance.context.ConfigRoot)
 		}
 	}
+	err = repo.SetConfigKey("Discovery.MDNS.Enabled", false)
+	if err != nil {
+		return nil, fmt.Errorf(
+			"Unable to disable MDNS: %s", err)
+	}
 
 	// Configure
 	nodeConfig := &core.BuildCfg{
-		Repo:      repo,
-		Permanent: true,
-		Online:    true,
+		Repo:                        repo,
+		Permanent:                   true,
+		Online:                      true,
 		DisableEncryptedConnections: false,
+
 		ExtraOpts: map[string]bool{
 			"pubsub": false,
 			"ipnsps": false,
@@ -140,6 +146,7 @@ func (ipfs *IPFS) Start(apiPort int) error {
 	}
 
 	go func() {
+		defer fmt.Sprintf("\n\nThere goes the IPFS node!\n\n")
 		err := corehttp.Serve(node, manet.NetListener(apiLis), opts...)
 		// TODO: Find a better way to pass errors back
 		if err != nil {
