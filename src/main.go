@@ -5,8 +5,8 @@ import (
 	"fmt"
 	"os"
 	"path/filepath"
-
-	"github.com/stellitecoin/libznipfs/src/ipfs"
+	"time"
+	//"github.com/stellitecoin/libznipfs/src/ipfs"
 )
 
 // "github.com/stellitecoin/libznipfs/src/ipfs"
@@ -19,9 +19,11 @@ func main() {
 
 	baseDataPath := "/tmp"
 
+	ipfsHash := "QmVLDAhCY3X9P2uRudKAryuQFPM5zqA3Yij1dY8FpGbL7T"
+
 	// Testing new Go IPFS libraries
 	fmt.Println("Testing new go-ipfs libraries")
-	ipfsNode, err := ipfs.New(filepath.Join(baseDataPath, "ipfs-test"))
+	ipfsNode, err := NewIPFSNode(filepath.Join(baseDataPath, "ipfs-test"))
 	if err != nil {
 		fmt.Printf("Unable to create IPFS node: %s\n", err)
 		os.Exit(1)
@@ -32,6 +34,15 @@ func main() {
 		fmt.Printf("Unable to start IPFS node: %s\n", err)
 		os.Exit(1)
 	}
+
+	data, err := ipfsNode.Get(ipfsHash)
+	if err != nil {
+		fmt.Printf("Unable fetch data from IPFS node: %s\n", err)
+		os.Exit(1)
+	}
+
+	fmt.Println(data)
+	time.Sleep(time.Minute)
 
 	os.Exit(0)
 
