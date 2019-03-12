@@ -12,7 +12,7 @@ default: build
 build_test_linux:
 	GOOS=linux \
 	GOARCH=amd64 \
-	go build -o ./bin/${APP_NAME}-linux-test ./src/main.go
+	go build -o ./bin/${APP_NAME}-linux-test ./src/*.go
 
 build_linux:
 	CGO_ENABLED=1 \
@@ -45,7 +45,7 @@ run: build_test_linux
 run_race:
 	GOOS=linux \
 	GOARCH=amd64 \
-	go run -race ./src/main.go
+	go run -race ./src/*.go
 
 clean:
 	rm ./bin/*
