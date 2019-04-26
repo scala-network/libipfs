@@ -11,6 +11,7 @@ import (
 	"time"
 
 	"github.com/ipfs/go-ipfs-config"
+	files "github.com/ipfs/go-ipfs-files"
 	"github.com/ipfs/go-ipfs/assets"
 	oldcmds "github.com/ipfs/go-ipfs/commands"
 	"github.com/ipfs/go-ipfs/core"
@@ -19,7 +20,7 @@ import (
 	"github.com/ipfs/go-ipfs/namesys"
 	"github.com/ipfs/go-ipfs/plugin/loader"
 	"github.com/ipfs/go-ipfs/repo/fsrepo"
-	coreiface "github.com/ipfs/interface-go-ipfs-core"
+	iface "github.com/ipfs/interface-go-ipfs-core"
 	options "github.com/ipfs/interface-go-ipfs-core/options"
 	ma "github.com/multiformats/go-multiaddr"
 	manet "github.com/multiformats/go-multiaddr-net"
@@ -133,9 +134,9 @@ func (ipfs *IPFS) Start(apiPort int) error {
 	apiMaddr = apiLis.Multiaddr()
 
 	var opts = []corehttp.ServeOption{
-		corehttp.CheckVersionOption(),
+		/*corehttp.CheckVersionOption(),*/
 		corehttp.CommandsOption(*ipfs.context),
-		corehttp.WebUIOption,
+		/*corehttp.WebUIOption,*/
 		corehttp.VersionOption(),
 		corehttp.LogOption(),
 	}
@@ -163,9 +164,10 @@ func (ipfs *IPFS) Start(apiPort int) error {
 
 // Get an object from IPFS and return it as bytes
 func (ipfs *IPFS) Get(hash string) ([]byte, error) {
-	fmt.Println("Get from IPFS")
+	fmt.Println("Get from IPFS", hash)
 
-	ctx, cancel := context.WithTimeout(context.Background(), time.Hour)
+	// 1 minute timeout
+	ctx, cancel := context.WithTimeout(context.Background(), time.Minute)
 	defer cancel()
 
 	node, err := ipfs.context.ConstructNode()
@@ -177,46 +179,30 @@ func (ipfs *IPFS) Get(hash string) ([]byte, error) {
 		return nil, err
 	}
 
-	path, err := coreiface.ParsePath(fmt.Sprintf("/ipfs/%s", hash))
+	// We only take an IPFS hash as input
+	parsedPath, err := iface.ParsePath(hash)
 	if err != nil {
-		return nil, fmt.Errorf("IPFS API: Path error %s", err)
+		return nil, err
 	}
 
-	resolvedPath, err := api.ResolvePath(ctx, path)
-	if err == coreiface.ErrOffline {
-		return nil, fmt.Errorf("IPFS API: Node is offline: %s", err)
-	} else if err != nil {
-		return nil, fmt.Errorf("IPFS API: %s", err)
+	ipfsNode, err := api.Unixfs().Get(ctx, parsedPath)
+	if err != nil {
+		return nil, err
 	}
 
-	fmt.Println(resolvedPath)
+	// We only support getting a file directly
+	reader := files.ToFile(ipfsNode)
+	if reader == nil {
+		return nil, fmt.Errorf("IPFS Get: Hash '%s' is not a regular file", hash)
+	}
 
-	return nil, nil
-	// node, err := ipfs.context.ConstructNode()
-	// if err != nil {
-	// 	return nil, fmt.Errorf("IPFS API: ConstructNode() failed: %s", err)
-	// }
-	//
-	// dagResolver := &resolver.Resolver{
-	// 	DAG:         node.DAG,
-	// 	ResolveOnce: uio.ResolveUnixfsOnce,
-	// }
-	//
-	// dagNode, err := core.Resolve(
-	// 	ipfs.context.Context(),
-	// 	node.Namesys,
-	// 	dagResolver,
-	// 	ipfspath.Path(fmt.Sprintf("/ipfs/%s", hash)))
-	// if err != nil {
-	// 	return nil, err
-	// }
-	//
-	// reader, err := uio.NewDagReader(ipfs.context.Context(), dagNode, node.DAG)
-	// if err != nil {
-	// 	panic(err)
-	// }
-	//
-	// return ioutil.ReadAll(reader)
+	contents, err := ioutil.ReadAll(reader)
+	if err != nil {
+		return nil, fmt.Errorf("IPFS Get: Unable to read contents: %s", err)
+	}
+	defer reader.Close()
+
+	return contents, nil
 }
 
 // Stop the IPFS node

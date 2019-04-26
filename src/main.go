@@ -5,7 +5,6 @@ import (
 	"fmt"
 	"os"
 	"path/filepath"
-	"time"
 	//"github.com/stellitecoin/libznipfs/src/ipfs"
 )
 
@@ -19,7 +18,7 @@ func main() {
 
 	baseDataPath := "/tmp"
 
-	ipfsHash := "QmVLDAhCY3X9P2uRudKAryuQFPM5zqA3Yij1dY8FpGbL7T"
+	ipfsHash := "QmP55FcTYsTJsP4a4aREgq5BrshyPpLHXhvPKXyPfzeHXg"
 
 	// Testing new Go IPFS libraries
 	fmt.Println("Testing new go-ipfs libraries")
@@ -29,7 +28,7 @@ func main() {
 		os.Exit(1)
 	}
 
-	err = ipfsNode.Start(5001)
+	err = ipfsNode.Start(9001)
 	if err != nil {
 		fmt.Printf("Unable to start IPFS node: %s\n", err)
 		os.Exit(1)
@@ -41,8 +40,10 @@ func main() {
 		os.Exit(1)
 	}
 
+	fmt.Println("Retrieved from IPFS")
 	fmt.Println(data)
-	time.Sleep(time.Minute)
+	fmt.Println(string(data))
+	//time.Sleep(time.Minute)
 
 	os.Exit(0)
 
