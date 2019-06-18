@@ -7,6 +7,7 @@ import (
 	"path/filepath"
 	"strings"
 
+	"github.com/contribute-torque/libznipfs/src/ipfs"
 	"github.com/contribute-torque/libznipfs/src/zeronet"
 	//	shell "github.com/ipfs/go-ipfs-api"
 )
@@ -40,47 +41,15 @@ func main() {
 	ipfsHash := strings.TrimSpace(string(content))
 	fmt.Printf("Get IPFS hash from ZeroNet: %s\n", ipfsHash)
 
-	//
-	// NOTE Start IPFS extract and run daemon
-	//
-	// fmt.Println("Testing new embedded ipfs")
-	//
-	// //baseDataPath := "/tmp"
-	//
-	// fileBytes, err := FSByte(false, "/pack/linux/ipfs")
-	// if err != nil {
-	// 	panic(err)
-	// }
-	//
-	// f, err := os.OpenFile("/tmp/ipfs", os.O_CREATE|os.O_WRONLY|os.O_TRUNC, 0755)
-	// if err != nil {
-	// 	panic(err)
-	// }
-	//
-	// n, err := f.Write(fileBytes)
-	// if err != nil {
-	// 	panic(err)
-	// }
-	// f.Close()
-	//
-	// fmt.Println("Wrote", n)
-	// fmt.Println(len(fileBytes))
-	//
-	// cmd := exec.Command("/tmp/ipfs", "daemon")
-	// if err != nil {
-	// 	panic(err)
-	// }
-	//
-	// op, err := cmd.CombinedOutput()
-	// fmt.Println(string(op))
-	// if err != nil {
-	// 	panic(err)
-	// }
-	//
-	// fmt.Println(string(op))
-	//
-	// NOTE: End IPFS extract and run daemon
-	//
+	ipfsNode, err := ipfs.New(baseDataPath)
+	if err != nil {
+		panic(err)
+	}
+
+	err = ipfsNode.Start(5009)
+	if err != nil {
+		panic(err)
+	}
 
 	//
 	// NOTE: Fetch via IPFS API
