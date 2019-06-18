@@ -1,6 +1,6 @@
 # libznipfs
 
-## V5 Rework
+## V6 Rework
 
 A lot has changed in IPFS since the V4 alpha test was done. We're doing a complete reword to align with the
 latest version of IPFS.
@@ -31,3 +31,14 @@ This will print the default IPFS readme
 ### Why Go and not C or C++
 
 Currently, no simple implementation or API exists for ZeroNet and IPFS in C or C++. Instead of writing, or re-writing, large parts of ZeroNet and IPFS in C or C++ we rather use Go and compile it to a C or C++ compatible library. IPFS is implemented in Go already and a Go library for ZeroNet already exist.
+
+### Installing
+
+In future this will be converted to a Go module which would remove the need
+for the manual installation.
+
+```
+go get github.com/sirupsen/logrus
+go get github.com/donovansolms/ZeroGo
+go get github.com/mjibson/esc
+```
