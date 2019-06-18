@@ -9,7 +9,7 @@ APP_NAME := libznipfs
 default: build
 
 package:
-	esc -o src/pack.go pack/linux
+	esc -pkg ipfs -o src/ipfs/pack.go pack/linux
 
 # Builds as executable for testing
 build_test_linux:
