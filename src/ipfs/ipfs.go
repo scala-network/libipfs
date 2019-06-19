@@ -7,7 +7,10 @@ import (
 	"os/exec"
 	"path/filepath"
 	"runtime"
+	"strings"
+	"time"
 
+	shell "github.com/ipfs/go-ipfs-api"
 	log "github.com/sirupsen/logrus"
 )
 
@@ -17,7 +20,9 @@ import (
 // libznipfs. This ensures the daemon operates correctly and has the
 // added benefit of being easy to maintain
 type IPFS struct {
+	basePath   string
 	daemonPath string
+	daemonCmd  *exec.Cmd
 }
 
 // New constructs a new IPFS node
@@ -55,6 +60,7 @@ func New(dataPath string) (*IPFS, error) {
 	outFile.Close()
 
 	instance := IPFS{
+		basePath:   dataPath,
 		daemonPath: daemonPath,
 	}
 
@@ -62,93 +68,73 @@ func New(dataPath string) (*IPFS, error) {
 }
 
 // Start the IPFS node and API
-func (ipfs *IPFS) Start(apiPort int) error {
+func (ipfs *IPFS) Start() error {
 
-	// TODO: Need to run ipfs init at least once before daemon will work
+	ipfsPath := filepath.Join(ipfs.basePath, ".torque-ipfs")
+	ipfsEnv := os.Environ()
+	ipfsEnv = append(ipfsEnv, fmt.Sprintf("IPFS_PATH=%s", ipfsPath))
 
-	cmd := exec.Command(ipfs.daemonPath, "daemon")
+	// Sometimes IPFS leaves an 'api' file in the path, this causes all commands
+	// to fail, including starting a daemon. Let's get rid of it first
+	os.Remove(filepath.Join(ipfsPath, "api"))
+
+	// Let's first check if we have a valid IPFS repo already
+	cmd := exec.Command(ipfs.daemonPath, "repo", "verify")
+	cmd.Env = ipfsEnv
 	op, err := cmd.CombinedOutput()
-	fmt.Println(string(op))
+	if err != nil {
+		fmt.Println(string(op))
+		// If we got an error that references that we need to 'ipfs init' first
+		// it most likely means this is a first run
+		if strings.Contains(string(op), "ipfs init") {
+			cmd = exec.Command(ipfs.daemonPath, "init")
+			cmd.Env = ipfsEnv
+			_, err := cmd.CombinedOutput()
+			if err != nil {
+				// If we hit this, ipfs could not init a new repo
+				return err
+			}
+		} else {
+			// Any other error than the need for 'ipfs init' needs to be returned
+			return err
+		}
+	}
+
+	// Repo is good to go, we can start the daemon
+	ipfs.daemonCmd = exec.Command(ipfs.daemonPath, "daemon")
+	ipfs.daemonCmd.Env = ipfsEnv
+	err = ipfs.daemonCmd.Start()
 	if err != nil {
 		return err
 	}
 
-	fmt.Println(string(op))
-
-	// apiAddr := fmt.Sprintf("/ip4/127.0.0.1/tcp/%d", apiPort)
-	// apiMaddr, err := ma.NewMultiaddr(apiAddr)
-	// if err != nil {
-	// 	return fmt.Errorf("IPFS API: invalid API address: %q (err: %s)", apiAddr, err)
-	// }
-	//
-	// apiLis, err := manet.Listen(apiMaddr)
-	// if err != nil {
-	// 	return fmt.Errorf("IPFS API: manet.Listen(%s) failed: %s", apiMaddr, err)
-	// }
-	// // we might have listened to /tcp/0 - lets see what we are listing on
-	// apiMaddr = apiLis.Multiaddr()
-	//
-	// var opts = []corehttp.ServeOption{
-	// 	corehttp.CheckVersionOption(),
-	// 	corehttp.CommandsOption(*ipfs.context),
-	// 	corehttp.WebUIOption,
-	// 	corehttp.VersionOption(),
-	// 	corehttp.LogOption(),
-	// }
-	//
-	// node, err := ipfs.context.ConstructNode()
-	// if err != nil {
-	// 	return fmt.Errorf("IPFS API: ConstructNode() failed: %s", err)
-	// }
-	//
-	// if err := node.Repo.SetAPIAddr(apiMaddr); err != nil {
-	// 	return fmt.Errorf("IPFS API: SetAPIAddr() failed: %s", err)
-	// }
-	//
-	// go func() {
-	// 	defer fmt.Sprintf("\n\nThere goes the IPFS node!\n\n")
-	// 	err := corehttp.Serve(node, manet.NetListener(apiLis), opts...)
-	// 	// TODO: Find a better way to pass errors back
-	// 	if err != nil {
-	// 		fmt.Printf("An API error occurred: %s\n", err)
-	// 		panic(err)
-	// 	}
-	// }()
+	go func() {
+		err = ipfs.daemonCmd.Wait()
+		fmt.Println("IPFS daemon completed with exit:", err)
+	}()
+	// Give the daemon some time to start up
+	// TODO: I don't have a simple way to check this... yet
+	time.Sleep(time.Second * 5)
 	return nil
 }
 
 // Get an object from IPFS and return it as bytes
 func (ipfs *IPFS) Get(hash string) ([]byte, error) {
 
-	// node, err := ipfs.context.ConstructNode()
-	// if err != nil {
-	// 	return nil, fmt.Errorf("IPFS API: ConstructNode() failed: %s", err)
-	// }
-	//
-	// dagResolver := &resolver.Resolver{
-	// 	DAG:         node.DAG,
-	// 	ResolveOnce: uio.ResolveUnixfsOnce,
-	// }
-	//
-	// dagNode, err := core.Resolve(
-	// 	ipfs.context.Context(),
-	// 	node.Namesys,
-	// 	dagResolver,
-	// 	ipfspath.Path(fmt.Sprintf("/ipfs/%s", hash)))
-	// if err != nil {
-	// 	return nil, err
-	// }
-	//
-	// reader, err := uio.NewDagReader(ipfs.context.Context(), dagNode, node.DAG)
-	// if err != nil {
-	// 	panic(err)
-	// }
-	//
-	// return ioutil.ReadAll(reader)
-	return nil, nil
+	fmt.Println("Getting from IPFS", hash)
+	downloadPath := filepath.Join(ipfs.basePath, hash)
+	sh := shell.NewShell("localhost:5001")
+	err := sh.Get(hash, downloadPath)
+	if err != nil {
+		fmt.Println("ERRRRRRR")
+		return nil, err
+	}
+
+	return ioutil.ReadFile(downloadPath)
 }
 
 // Stop the IPFS node
-func (ipfs *IPFS) Stop() {
-	//ipfs.cancelFunc()
+func (ipfs *IPFS) Stop() error {
+	fmt.Println("Stopping daemon")
+	return ipfs.daemonCmd.Process.Kill()
 }
