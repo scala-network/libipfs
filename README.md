@@ -41,4 +41,5 @@ for the manual installation.
 go get github.com/sirupsen/logrus
 go get github.com/donovansolms/ZeroGo
 go get github.com/mjibson/esc
+go get github.com/ipfs/go-ipfs-api
 ```
