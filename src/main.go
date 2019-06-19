@@ -9,7 +9,6 @@ import (
 
 	"github.com/contribute-torque/libznipfs/src/ipfs"
 	"github.com/contribute-torque/libznipfs/src/zeronet"
-	//	shell "github.com/ipfs/go-ipfs-api"
 )
 
 // main runs libznipfs and retrieves test data from ZeroNet and IPFS
@@ -46,21 +45,21 @@ func main() {
 		panic(err)
 	}
 
-	err = ipfsNode.Start(5009)
+	err = ipfsNode.Start()
 	if err != nil {
 		panic(err)
 	}
 
-	//
-	// NOTE: Fetch via IPFS API
-	//
-	// sh := shell.NewShell("localhost:5001")
-	// err := sh.Get("QmbQVPLwUSbLQL3tkQGFRFWDTCjRs6LSJDPEjG24BnNuhD", "/tmp/testfile.txt")
-	// if err != nil {
-	// 	panic(err)
-	// }
-	//
-	// NOTE: End Fetch via IPFS API
-	//
+	result, err := ipfsNode.Get(ipfsHash)
+	if err != nil {
+		panic(err)
+	}
+
+	fmt.Println(string(result))
+
+	err = ipfsNode.Stop()
+	if err != nil {
+		panic(err)
+	}
 
 }
