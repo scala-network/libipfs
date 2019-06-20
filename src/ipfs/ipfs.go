@@ -40,7 +40,7 @@ func New(dataPath string) (*IPFS, error) {
 	fileBytes, err := FSByte(false,
 		fmt.Sprintf("/pack/%s/%s", runtime.GOOS, binaryName))
 	if err != nil {
-		panic(err)
+		return nil, err
 	}
 
 	daemonPath := filepath.Join(dataPath, binaryName)
@@ -83,7 +83,6 @@ func (ipfs *IPFS) Start() error {
 	cmd.Env = ipfsEnv
 	op, err := cmd.CombinedOutput()
 	if err != nil {
-		fmt.Println(string(op))
 		// If we got an error that references that we need to 'ipfs init' first
 		// it most likely means this is a first run
 		if strings.Contains(string(op), "ipfs init") {
@@ -121,20 +120,16 @@ func (ipfs *IPFS) Start() error {
 // Get an object from IPFS and return it as bytes
 func (ipfs *IPFS) Get(hash string) ([]byte, error) {
 
-	fmt.Println("Getting from IPFS", hash)
 	downloadPath := filepath.Join(ipfs.basePath, hash)
 	sh := shell.NewShell("localhost:5001")
 	err := sh.Get(hash, downloadPath)
 	if err != nil {
-		fmt.Println("ERRRRRRR")
 		return nil, err
 	}
-
 	return ioutil.ReadFile(downloadPath)
 }
 
 // Stop the IPFS node
 func (ipfs *IPFS) Stop() error {
-	fmt.Println("Stopping daemon")
 	return ipfs.daemonCmd.Process.Kill()
 }

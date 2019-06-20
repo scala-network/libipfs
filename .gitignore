@@ -14,3 +14,7 @@
 
 # Build output
 bin/
+
+example/*
+!example/README.md
+!example/usage.cpp
