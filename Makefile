@@ -8,8 +8,11 @@ APP_NAME := libznipfs
 
 default: build
 
-package:
+package_linux:
 	esc -pkg ipfs -o src/ipfs/pack.go pack/linux
+
+package_windows:
+	esc -pkg ipfs -o src/ipfs/pack.go pack/windows
 
 # Builds as executable for testing
 build_test_linux:
@@ -17,13 +20,13 @@ build_test_linux:
 	GOARCH=amd64 \
 	go build -o ./bin/${APP_NAME}-linux-test ./src/*.go
 
-build_linux:
+build_linux: package_linux
 	CGO_ENABLED=1 \
 	GOOS=linux \
 	GOARCH=amd64 \
 	go build -buildmode=c-archive -o ./bin/libznipfs-linux.a ./src/libznipfs.go
 
-build_windows:
+build_windows: package_windows
 	CGO_ENABLED=1 \
 	GOOS=windows \
 	GOARCH=amd64 \
