@@ -8,11 +8,17 @@ APP_NAME := libznipfs
 
 default: build
 
+# Embeds the ipfs binary for Linux
 package_linux:
 	esc -pkg ipfs -o src/ipfs/pack.go pack/linux
 
+# Embeds the ipfs binary for Windows
 package_windows:
 	esc -pkg ipfs -o src/ipfs/pack.go pack/windows
+
+# Embeds the ipfs binary for MacOS
+package_macos:
+	esc -pkg ipfs -o src/ipfs/pack.go pack/darwin
 
 # Builds as executable for testing
 build_test_linux:
@@ -33,11 +39,11 @@ build_windows: package_windows
 	CC=x86_64-w64-mingw32-gcc \
 	go build -buildmode=c-archive -o ./bin/libznipfs-windows.a ./src/libznipfs.go
 
-build_macos:
+build_macos: package_macos
 	CGO_ENABLED=1 \
 	GOOS=darwin \
 	GOARCH=amd64 \
-	go build -buildmode=c-archive -o ./bin/libznipfs-mac.a ./src/libznipfs.go
+	go build -buildmode=c-archive -o ./bin/libznipfs-macos.a ./src/libznipfs.go
 
 build: build_linux \
 	build_windows \
