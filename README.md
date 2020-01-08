@@ -5,8 +5,6 @@
 A lot has changed in IPFS since the V4 alpha test was done. We're doing a complete reword to align with the
 latest version of IPFS.
 
-
-
 ## About
 
 A C-style library implemented in Go to retrieve the seedlist from ZeroNet and IPFS
