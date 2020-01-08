@@ -25,6 +25,12 @@ type IPFS struct {
 	daemonCmd  *exec.Cmd
 }
 
+type Error struct {
+	Command string
+	Message string
+	Code    int
+}
+
 // New constructs a new IPFS node
 func New(dataPath string) (*IPFS, error) {
 

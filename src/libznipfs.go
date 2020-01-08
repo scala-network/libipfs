@@ -5,19 +5,10 @@ import "C"
 import (
 	"encoding/json"
 	"fmt"
-	//"os"
 	"path/filepath"
-	//"sort"
-	//"strconv"
-	"strings"
-	//"sync"
-	//"time"
-
-  "github.com/contribute-torque/libznipfs/src/ipfs"
-	"github.com/contribute-torque/libznipfs/src/zeronet"
+	"github.com/scala-network/libznipfs/src/ipfs"
 )
 
-var zn *zeronet.ZeroNet
 var ipfsNode *ipfs.IPFS
 
 // Result holds the seedlist and any error that occurred in the process
@@ -53,13 +44,6 @@ func IPFSStartNode(dataPath *C.char) *C.char {
 	var err error
 	basePath := C.GoString(dataPath)
 
-	zn, err = zeronet.New(filepath.Join(basePath, "zeronet"))
-	if err != nil {
-		result.Status = "err"
-		result.Message = fmt.Sprintf("Unable to create ZeroNet instance: %s\n", err)
-		return toCJSONString(result)
-	}
-
 	ipfsNode, err = ipfs.New(filepath.Join(basePath, "ipfs"))
 	if err != nil {
 		result.Status = "err"
@@ -76,7 +60,7 @@ func IPFSStartNode(dataPath *C.char) *C.char {
 	return toCJSONString(result)
 }
 
-
+/*
 //export ZNIPFSGetSeedList
 // ZNIPFSGetSeedList retrieves the seedlist using ZeroNet and IPFS and returns
 // it as JSON to the daemon. We use a named return here to ensure any
@@ -101,17 +85,7 @@ func ZNIPFSGetSeedList(zeroNetAddress *C.char) (resultJSON *C.char) {
 		Message: fmt.Sprintf("Seedlist retrieved from ZeroNet and IPFS"),
 	}
 
-	address := C.GoString(zeroNetAddress)
-
-	// This is a well-known ZeroNet address. We store the IPFS hash in ipfs.hash
-	content, err := zn.GetFile(address, "ipfs.hash")
-	if err != nil {
-		result.Status = "err"
-		result.Message = fmt.Sprintf("Unable fetch from ZeroNet: %s\n", err)
-		resultJSON = toCJSONString(result)
-		return
-	}
-	ipfsHash := strings.TrimSpace(string(content))
+	ipfsHash := "Qmaisz6NMhDB51cCvNWa1GMS7LU1pAxdF4Ld6Ft9kZEP2a"
 
 	data, err := ipfsNode.Get(ipfsHash)
 	if err != nil {
@@ -133,14 +107,44 @@ func ZNIPFSGetSeedList(zeroNetAddress *C.char) (resultJSON *C.char) {
 	resultJSON = toCJSONString(result)
 	return
 }
-
+*/
+/*
 //export IPFSStopNode
 func IPFSStopNode() {
 	// Stop the ZN/IPFS node
 	ipfsNode.Stop()
 }
+*/
+/* Should implement this function into the ipfs.go file instead */
+/*
+//export resolve
+func resolve() (resultJSON *C.char) {
+	defer func() {
+		if r := recover(); r != nil {
+			resultJSON = toCJSONString(Result{
+				Status:  "err",
+				Message: fmt.Sprintf("Resolution failed HORRIBLY. %s", r),
+			})
+			return
+		}
+	}()
 
-
+	sh := shell.NewShell("localhost:5001")
+	result, err := sh.Resolve("QmNW7Db89EGQZmf6cDBrFANQWL2XCDCMddneQjqXV6ssUC")
+	if err != nil {
+		resultJSON = toCJSONString(Result{
+			Status:  "err",
+			Message: fmt.Sprintf("Resolution failed HORRIBLY. %s", err),
+		})
+		return
+	}
+	resultJSON = toCJSONString(Result{
+		Status:  "OK",
+		Message: fmt.Sprintf(result),
+	})
+	return
+}
+*/
 // toCJSONString marshals the error result into JSON for the daemon to
 // understand and returns it in the required C format
 func toCJSONString(result Result) *C.char {
