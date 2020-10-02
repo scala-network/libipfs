@@ -76,7 +76,7 @@ func New(dataPath string) (*IPFS, error) {
 // Start the IPFS node and API
 func (ipfs *IPFS) Start() error {
 
-	ipfsPath := filepath.Join(ipfs.basePath, ".torque-ipfs")
+	ipfsPath := filepath.Join(ipfs.basePath, ".scala-ipfs")
 	ipfsEnv := os.Environ()
 	ipfsEnv = append(ipfsEnv, fmt.Sprintf("IPFS_PATH=%s", ipfsPath))
 
@@ -92,7 +92,7 @@ func (ipfs *IPFS) Start() error {
 		// If we got an error that references that we need to 'ipfs init' first
 		// it most likely means this is a first run
 		if strings.Contains(string(op), "ipfs init") {
-			cmd = exec.Command(ipfs.daemonPath, "init")
+			cmd = exec.Command(ipfs.daemonPath, "init --profile server")
 			cmd.Env = ipfsEnv
 			_, err := cmd.CombinedOutput()
 			if err != nil {
