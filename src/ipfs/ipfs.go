@@ -92,7 +92,7 @@ func (ipfs *IPFS) Start() error {
 		// If we got an error that references that we need to 'ipfs init' first
 		// it most likely means this is a first run
 		if strings.Contains(string(op), "ipfs init") {
-			cmd = exec.Command(ipfs.daemonPath, "init --profile server")
+			cmd = exec.Command(ipfs.daemonPath, "init", "--profile", "server")
 			cmd.Env = ipfsEnv
 			_, err := cmd.CombinedOutput()
 			if err != nil {
