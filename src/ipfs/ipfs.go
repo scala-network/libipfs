@@ -1,6 +1,7 @@
 package ipfs
 
 import (
+
 	"fmt"
 	"io/ioutil"
 	"os"
@@ -133,6 +134,41 @@ func (ipfs *IPFS) Get(hash string) ([]byte, error) {
 		return nil, err
 	}
 	return ioutil.ReadFile(downloadPath)
+}
+
+// Resolve an IPNS name to IPFS hash
+func (ipfs *IPFS) Resolve(peerid string) (string, error) {
+
+	sh := shell.NewShell("localhost:5001")
+	resp, err := sh.Resolve(peerid)
+	if err != nil {
+		return "", err
+	}
+	return resp, nil
+}
+
+// Add a directory to IPFS
+func (ipfs *IPFS) AddDirectory(directory string) (string, error) {
+
+	sh := shell.NewShell("localhost:5001")
+	resp, err := sh.AddDir(directory)
+	if err != nil {
+		return "", err
+	}
+	return resp, nil
+}
+
+// Add bootstrap nodes to IPFS
+func (ipfs *IPFS) BootstrapAdd(peers []string) (string, error) {
+
+	sh := shell.NewShell("localhost:5001")
+	resp, err := sh.BootstrapAdd(peers)
+	if err != nil {
+		return "", err
+	}
+
+	resp2 := strings.Join(resp, ",")
+	return resp2, nil
 }
 
 // Stop the IPFS node
