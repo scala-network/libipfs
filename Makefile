@@ -4,7 +4,7 @@
 
 .PHONY: default build fmt lint run run_race test clean vet docker_build docker_run docker_clean
 
-APP_NAME := libznipfs
+APP_NAME := libipfs
 
 default: build
 
@@ -30,20 +30,20 @@ build_linux: package_linux
 	CGO_ENABLED=1 \
 	GOOS=linux \
 	GOARCH=amd64 \
-	go build -buildmode=c-archive -o ./bin/libznipfs-linux.a ./src/libznipfs.go
+	go build -buildmode=c-archive -o ./bin/libipfs-linux.a ./src/libipfs.go
 
 build_windows: package_windows
 	CGO_ENABLED=1 \
 	GOOS=windows \
 	GOARCH=amd64 \
 	CC=x86_64-w64-mingw32-gcc \
-	go build -buildmode=c-archive -o ./bin/libznipfs-windows.a ./src/libznipfs.go
+	go build -buildmode=c-archive -o ./bin/libipfs-windows.a ./src/libipfs.go
 
 build_macos: package_macos
 	CGO_ENABLED=1 \
 	GOOS=darwin \
 	GOARCH=amd64 \
-	go build -buildmode=c-archive -o ./bin/libznipfs-macos.a ./src/libznipfs.go
+	go build -buildmode=c-archive -o ./bin/libipfs-macos.a ./src/libipfs.go
 
 build: build_linux \
 	build_windows \

@@ -1,43 +1,58 @@
-# libznipfs
+# libIPFS
 
-## V6 Rework
+A C-style library library that wraps around go-ipfs and provides a simple API.
 
-A lot has changed in IPFS since the V4 alpha test was done. We're doing a complete reword to align with the
-latest version of IPFS.
+## Example
 
-## About
+```cpp
+#include "libipfs-linux.h"
+#include <iostream>
 
-A C-style library implemented in Go to retrieve the seedlist from ZeroNet and IPFS
+int main() {
+
+/* Starts the IPFS node */
+std::cout << IPFSStartNode("./") << std::endl;
+
+/* Add a custom bootstrap */
+/* std::cout << BootstrapAdd("/ip4/127.0.0.1/tcp/4001/p2p/12D3KooWJjbW3sQPpvsA5saTZfihc2xQ1dwN2xXog2xAZYifQFmR") << std::endl; */
+
+/* Resolve an IPNS name */
+std::cout << ResolveIPNS("12D3KooWJjbW3sQPpvsA5saTZfihc2xQ1dwN2xXog2xAZYifQFmR") << std::endl;
+
+/* Add a directory to IPFS */
+std::cout << AddDirectory("./test") << std::endl;
+
+/* Stop IPFS Node */
+std::cout << IPFSStopNode() << std::endl;
+}
+```
 
 ## Overview
 
-libznipfs is used by the Stellite daemon to retrieve information from ZeroNet and
-IPFS. It starts a full IPFS node and exposes some basic functionality to the
-daemon.
+libIPFS is used by the Scala Network Project to retrieve and publish critical information on to IPFS.
 
-When libznipfs is started from the daemon it runs a full IPFS node including the
-HTTP API. This means standard IPFS commands can be used while the Stellite daemon
-is running.
-
-To use the API, you need to set the IPFS path to your Stellite data directory
-
-Example:
-`IPFS_PATH=~/.stellite/ipfs ipfs cat /ipfs/QmS4ustL54uo8FzR9455qaxZwuMiUhyvMcX9Ba8nUH4uVv/readme`
-
-This will print the default IPFS readme
+It runs a full blown IPFS instance and even exposes the HTTP API and Gateway of the underlying daemon.
 
 ### Why Go and not C or C++
 
-Currently, no simple implementation or API exists for ZeroNet and IPFS in C or C++. Instead of writing, or re-writing, large parts of ZeroNet and IPFS in C or C++ we rather use Go and compile it to a C or C++ compatible library. IPFS is implemented in Go already and a Go library for ZeroNet already exist.
+Currently, no simple implementation or API exists for IPFS in C or C++. Instead of writing, or re-writing, large parts of IPFS in C or C++ we rather use Go and compile it to a C or C++ compatible library. IPFS is implemented in Go already.
 
-### Installing
+###  Building
 
-In future this will be converted to a Go module which would remove the need
-for the manual installation.
+#### Requirements
 
+* go >= 1.14.2
+* make >= 4.2.1
+* gcc and g++ >= 9.3.0
+
+To build the library you can use the following commands, the outputs can be found in bin/
+
+```bash
+git clone https://github.com/scala-network/libipfs
+cd libipfs/
+make
 ```
-go get github.com/sirupsen/logrus
-go get github.com/donovansolms/ZeroGo
-go get github.com/mjibson/esc
-go get github.com/ipfs/go-ipfs-api
-```
+
+###  LICENSE
+
+View [LICENCE](https://github.com/scala-network/libipfs/blob/master/LICENSE)
