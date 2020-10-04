@@ -3,16 +3,15 @@
 
 ```
 # Copy the library and header
-cp ../bin/libznipfs-linux.* ./
-# Compile
-g++ -pthread -o usage usage.cpp libznipfs-linux.a
-# Run
+./make.sh
 ./usage
 ```
 
 ## Example output
 
-```
-This is a test C application to call libznipfs.
-{"Status":"ok","Message":"Seedlist retrieved from ZeroNet and IPFS","Seedlist":["139.180.198.68:20188","89.158.106.154:20188"]}⏎   
+```json
+{"Status":"ok","Message":"IPFS node started on port 5001"}
+{"Status":"ok","Message":"/ipfs/QmSgSaLtfnPrjU6BBKUrxZG93dAZhz1gEsMgW1GbY5ne1u"}
+{"Status":"ok","Message":"QmaXwmJd2XEFAGkmauKomK13mERtRC1h3Frmi1LgyADSHZ"}
+{"Status":"ok","Message":"IPFS node stopped"}
 ```
