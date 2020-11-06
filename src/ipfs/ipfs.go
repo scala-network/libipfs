@@ -10,6 +10,7 @@ import (
 	"runtime"
 	"strings"
 	"time"
+    "net/http"
 
 	shell "github.com/ipfs/go-ipfs-api"
 	log "github.com/sirupsen/logrus"
@@ -171,7 +172,32 @@ func (ipfs *IPFS) BootstrapAdd(peers []string) (string, error) {
 	return resp2, nil
 }
 
+
+// Get PeerID
+func (ipfs *IPFS) GetPeerID() (string, error) {
+    
+    sh:= shell.NewShell("localhost:5001")
+    resp, err:= sh.ID();
+    if err != nil {
+        return "", err
+    }
+    return resp.ID, nil
+}
+
 // Stop the IPFS node
-func (ipfs *IPFS) Stop() error {
-	return ipfs.daemonCmd.Process.Kill()
+func (ipfs *IPFS) Stop() (error) {
+
+    client := &http.Client{}
+    req, err := http.NewRequest("POST", "http://localhost:5001/api/v0/shutdown", nil)
+    if err != nil {
+        return err
+    }
+
+    resp, err := client.Do(req)
+    _ = resp
+    if err != nil {
+        return err
+    }
+
+    return nil
 }

@@ -13,8 +13,4 @@
 # Build output
 bin/
 
-example/*
-!example/README.md
-!example/usage.cpp
-
 src/ipfs/pack.go

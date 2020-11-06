@@ -60,13 +60,19 @@ func IPFSStartNode(dataPath *C.char) *C.char {
 
 //export IPFSStopNode
 func IPFSStopNode() *C.char{
-	result := Result{
+	result:= Result{
 		Status:  "ok",
 		Message: fmt.Sprintf("IPFS node stopped"),
 	}
-	
-	ipfsNode.Stop()
-	return toCJSONString(result)
+
+    err := ipfsNode.Stop()
+    
+    if err != nil {
+        result.Status = "err"
+        result.Message = fmt.Sprintf("IPFS node could not be stopped")
+    }
+    
+    return toCJSONString(result)
 }
 
 //export ResolveIPNS
@@ -129,6 +135,27 @@ func BootstrapAdd(peer *C.char) *C.char{
 
 	return toCJSONString(result)
 }
+
+//export GetPeerID
+func GetPeerID() *C.char{
+
+	var err error
+	var response string
+	var result Result
+
+	response, err = ipfsNode.GetPeerID()
+
+	if err != nil {
+		result.Status = "err"
+		result.Message = fmt.Sprintf("%s",err)
+	}else{
+		result.Status = "ok"
+		result.Message = fmt.Sprintf("%s", response)
+	}
+
+	return toCJSONString(result)
+}
+
 
 
 
