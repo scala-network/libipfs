@@ -18,7 +18,7 @@ import (
 // IPFS implements communication over IPFS.
 //
 // We package the official IPFS daemon release for each platform into
-// libznipfs. This ensures the daemon operates correctly and has the
+// libipfs. This ensures the daemon operates correctly and has the
 // added benefit of being easy to maintain
 type IPFS struct {
 	basePath   string

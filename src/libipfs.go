@@ -1,4 +1,4 @@
-// package name: libznipfs
+// package name: libipfs
 package main
 
 import "C"
@@ -6,7 +6,7 @@ import (
 	"encoding/json"
 	"fmt"
 	"path/filepath"
-	"github.com/scala-network/libznipfs/src/ipfs"
+	"github.com/scala-network/libipfs/src/ipfs"
 )
 
 var ipfsNode *ipfs.IPFS
@@ -26,7 +26,7 @@ func main() {
 }
 
 /**
- * libznipfs implements the C-style library for fetching information
+ * libipfs implements the C-style library for fetching information
  * from ZeroNet and IPFS.
  * Here we only have 3 exported functions that can be called from C
  */

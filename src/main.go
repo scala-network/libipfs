@@ -1,16 +1,15 @@
-// package main implements libznipfs as an executable instead of a library
+// package main implements libipfs as an executable instead of a library
 package main
 
 import (
 	"fmt"
-
-	"github.com/scala-network/libznipfs/src/ipfs"
+	"github.com/scala-network/libipfs/src/ipfs"
 )
 
-// main runs libznipfs and retrieves test data from ZeroNet and IPFS
+// main runs libipfs and retrieves test data from ZeroNet and IPFS
 func main() {
 
-	fmt.Println("Test libznipfs as executable")
+	fmt.Println("Test libipfs as executable")
 
 	baseDataPath := "/tmp"
 
