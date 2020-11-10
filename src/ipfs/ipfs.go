@@ -184,6 +184,17 @@ func (ipfs *IPFS) GetPeerID() (string, error) {
     return resp.ID, nil
 }
 
+// Publish a content hash to IPNS
+func (ipfs *IPFS) PublishName(contentHash string) (string, error) {
+    sh:= shell.NewShell("localhost:5001")
+    err:= sh.Publish("", contentHash);
+    if err != nil {
+        return "",err
+    }
+    return "Successfully published to IPNS",nil
+}
+
+
 // Stop the IPFS node
 func (ipfs *IPFS) Stop() (error) {
 
