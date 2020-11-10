@@ -156,7 +156,25 @@ func GetPeerID() *C.char{
 	return toCJSONString(result)
 }
 
+//export PublishToIPNS
+func PublishToIPNS(contentHash *C.char) *C.char{
 
+	var err error
+	var response string
+	var result Result
+
+	response, err = ipfsNode.PublishName(C.GoString(contentHash))
+
+	if err != nil {
+		result.Status = "err"
+		result.Message = fmt.Sprintf("%s",err)
+	}else{
+		result.Status = "ok"
+		result.Message = fmt.Sprintf("%s", response)
+	}
+
+	return toCJSONString(result)
+}
 
 
 // toCJSONString marshals the error result into JSON for the daemon to
