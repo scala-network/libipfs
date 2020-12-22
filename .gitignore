@@ -14,3 +14,8 @@
 bin/
 
 src/ipfs/pack.go
+
+example/ipfs/
+example/libipfs-linux.a
+example/libipfs-linux.h
+example/usage

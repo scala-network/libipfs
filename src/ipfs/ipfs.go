@@ -108,7 +108,7 @@ func (ipfs *IPFS) Start() error {
 	}
 
 	// Repo is good to go, we can start the daemon
-	ipfs.daemonCmd = exec.Command(ipfs.daemonPath, "daemon")
+	ipfs.daemonCmd = exec.Command(ipfs.daemonPath, "daemon", "--enable-namesys-pubsub")
 	ipfs.daemonCmd.Env = ipfsEnv
 	err = ipfs.daemonCmd.Start()
 	if err != nil {
@@ -191,7 +191,7 @@ func (ipfs *IPFS) PublishName(contentHash string) (string, error) {
     if err != nil {
         return "",err
     }
-    return "Successfully published to IPNS",nil
+    return "Successfully published to IPNS", nil
 }
 
 
