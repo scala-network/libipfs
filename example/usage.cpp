@@ -10,10 +10,12 @@ std::cout << IPFSStartNode("./") << std::endl;
 /* std::cout << BootstrapAdd("/ip4/127.0.0.1/tcp/4001/p2p/12D3KooWJjbW3sQPpvsA5saTZfihc2xQ1dwN2xXog2xAZYifQFmR") << std::endl; */
 
 /* Resolve an IPNS name */
-std::cout << ResolveIPNS("12D3KooWJjbW3sQPpvsA5saTZfihc2xQ1dwN2xXog2xAZYifQFmR") << std::endl;
+//std::cout << ResolveIPNS("alpha.scalaproject.io") << std::endl;
+
+//std::cout << Cat("QmTxJHZpQtYGwanJyNEvfJgtkRomDRgRx73o7BT2awkyng/checkpoints.json") << std::endl;
 
 /* Add a directory to IPFS */
-std::cout << AddDirectory("./test") << std::endl;
+//std::cout << AddDirectory("./test") << std::endl;
 
 /* Stop IPFS Node */
 std::cout << IPFSStopNode() << std::endl;
