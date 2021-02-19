@@ -37,7 +37,7 @@ func IPFSStartNode(dataPath *C.char) *C.char {
 	// result is marshalled to JSON before being returned to the daemon
 	result := Result{
 		Status:  "ok",
-		Message: fmt.Sprintf("IPFS node started on port 5001"),
+		Message: fmt.Sprintf("IPFS node started on port 11816"),
 	}
 	var err error
 	basePath := C.GoString(dataPath)
@@ -176,6 +176,25 @@ func PublishToIPNS(contentHash *C.char) *C.char{
 	return toCJSONString(result)
 }
 
+//export Cat
+func Cat(toView *C.char) *C.char{
+
+	var err error
+	var response string
+	var result Result
+
+	response, err = ipfsNode.Cat(C.GoString(toView))
+
+	if err != nil {
+		result.Status = "err"
+		result.Message = fmt.Sprintf("%s",err)
+	}else{
+		result.Status = "ok"
+		result.Message = fmt.Sprintf("%s", response)
+	}
+
+	return toCJSONString(result)
+}
 
 // toCJSONString marshals the error result into JSON for the daemon to
 // understand and returns it in the required C format
