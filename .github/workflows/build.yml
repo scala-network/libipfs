@@ -15,7 +15,7 @@ jobs:
     - name: Checkout code
       uses: actions/checkout@v2
     - name: Install dependencies for linux
-      run: apt-get update -y && apt-get install build-essential
+      run: sudo apt update && sudo apt install -y build-essential
     - name: Install go dependencies
       run: |
         go get github.com/sirupsen/logrus
