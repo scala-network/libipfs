@@ -48,6 +48,10 @@ Currently, no simple implementation or API exists for IPFS in C or C++. Instead 
 To build the library you can use the following commands, the outputs can be found in bin/
 
 ```bash
+go get github.com/sirupsen/logrus
+go get github.com/ipfs/go-ipfs-api
+go get github.com/mjibson/esc
+
 git clone https://github.com/scala-network/libipfs
 cd libipfs/
 make
