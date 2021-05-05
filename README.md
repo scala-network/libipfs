@@ -1,4 +1,5 @@
 # libIPFS
+[![CI-Build](https://github.com/scala-network/libipfs/actions/workflows/build-ci.yml/badge.svg)](https://github.com/scala-network/libipfs/actions/workflows/build-ci.yml)
 
 A C-style library library that wraps around go-ipfs and provides a simple API.
 
