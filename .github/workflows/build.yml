@@ -1,25 +1,41 @@
+name: CI/Build
 on: [push, pull_request]
-name: Build
+
 jobs:
-  build:
-    strategy:
-      matrix:
-        go-version: [1.16.x]
-        os: [ubuntu-latest]
-    runs-on: ${{ matrix.os }}
+  build-linux:
+    runs-on: ubuntu-latest
     steps:
     - name: Install Go
       uses: actions/setup-go@v2
       with:
-        go-version: ${{ matrix.go-version }}
+        go-version: [1.16.x]
     - name: Checkout code
       uses: actions/checkout@v2
-    - name: Install dependencies for linux
+    - name: Install linux dependencies
       run: sudo apt update && sudo apt install -y build-essential
     - name: Install go dependencies
       run: |
         go get github.com/sirupsen/logrus
         go get github.com/ipfs/go-ipfs-api
         go get github.com/mjibson/esc
-    - name: Package IPFS and build library for linux
+    - name: Build libipfs
       run: make build_linux
+
+    build-windows:
+    runs-on: ubuntu-latest
+    steps:
+    - name: Install Go
+      uses: actions/setup-go@v2
+      with:
+        go-version: [1.16.x]
+    - name: Checkout code
+      uses: actions/checkout@v2
+    - name: Install linux dependencies
+      run: sudo apt update && sudo apt install -y build-essential gcc-mingw-w64-x86-64 g++-mingw-w64-x86-64 wine64
+    - name: Install go dependencies
+      run: |
+        go get github.com/sirupsen/logrus
+        go get github.com/ipfs/go-ipfs-api
+        go get github.com/mjibson/esc
+    - name: Build libipfs
+      run: make build_windows
