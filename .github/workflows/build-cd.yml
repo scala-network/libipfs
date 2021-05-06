@@ -28,20 +28,22 @@ jobs:
         uses: actions/setup-go@v2
         with:
           go-version: 1.16.x
-      - name: Set platform flag
-        run: |
-          if [[ ${{matrix.TARGET}} == *x86_64-apple-darwin* ]]; then DARWIN=1; else DARWIN=0 ; fi
       - name: Install dependencies
-        run: /
-          if [[ "${DARWIN}" == 0 ]]; then sudo apt update && sudo apt install -y build-essential zip; else echo "No dependencies for macOS"; fi
+        if: ${{ matrix.os == 'ubuntu-latest' }}
+        run: |
+          sudo apt update && sudo apt install -y build-essential zip gcc-mingw-w64-x86-64 g++-mingw-w64-x86-64 wine64
       - name: Install go dependencies
         run: |
           go get github.com/sirupsen/logrus
           go get github.com/ipfs/go-ipfs-api
           go get github.com/mjibson/esc
       - name: Build libipfs
+        if: ${{ matrix.os == 'ubuntu-latest' }}
         run: |
-          if [[ "${DARWIN}" == 0 ]]; then make build_linux && make build_windows; else make build_macos; fi
+          make build_linux && make build_windows
+        if: ${{ matrix.os == 'macos-latest' }}
+        run: |
+          make build_macos
       - name: Pacakge artifacts
         run: |
           mkdir libipfs-${{ github.ref }}-all-platforms/
