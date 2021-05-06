@@ -6,7 +6,10 @@ on:
 
 jobs:
   create-release:
-    runs-on: ubuntu-latest
+    runs-on: ${{ matrix.os }}
+    strategy:
+      matrix:
+        os: [macos-latest, ubuntu-latest]
     steps:
     - name: Create new release
       uses: actions/create-release@v1
@@ -19,37 +22,38 @@ jobs:
         body_path: CHANGELOG.md
       env:
         GITHUB_TOKEN: ${{ github.token }}
-
-  release-linux:
-    runs-on: ubuntu-latest
     steps:
-    - name: Install Go
-      uses: actions/setup-go@v2
-      with:
-        go-version: 1.16.x
-    - name: Checkout code
-      uses: actions/checkout@v2
-    - name: Install linux dependencies
-      run: sudo apt update && sudo apt install -y build-essential zip
-    - name: Install go dependencies
-      run: |
-        go get github.com/sirupsen/logrus
-        go get github.com/ipfs/go-ipfs-api
-        go get github.com/mjibson/esc
-    - name: Build libipfs
-      run: make build_linux
-    - name: Package artifacts
-      run: |
-        mkdir libipfs-${{ github.ref }}-linux-x64
-        cd libipfs-${{ github.ref }}-linux-x64
-        zip -r libipfs-${{ github.ref }}-linux-x64.zip libipfs-${{ github.ref }}-linux-x64/
-    - name: Upload aritifacts
-      uses: actions/upload-release-asset@v1
-      env:
-        GITHUB_TOKEN: ${{ github.token }}
-      with:
-        upload_url: ${{ jobs.create-release.steps.create_release.outputs.upload_url }}
-        asset_path: ./libipfs-${{ github.ref }}-linux-x64.zip
-        asset_name: libipfs-${{ github.ref }}-linux-x64.zip
-        asset_content_type: application/zip
-      
+      - name: Install go
+        uses: actions/setup-go@v2
+        with:
+          go-version: 1.16.x
+      - name: Checkout code
+        uses: actions/checkout@v2
+      - name: Set platform flag
+        run: |
+          if [[ ${{matrix.TARGET}} == *x86_64-apple-darwin* ]]; then DARWIN=1; else DARWIN=0 ; fi
+      - name: Install dependencies
+        run: /
+          if [[ "${DARWIN}" == 0 ]]; then sudo apt update && sudo apt install -y build-essential zip; else echo "No dependencies for macOS"; fi
+      - name: Install go dependencies
+        run: |
+          go get github.com/sirupsen/logrus
+          go get github.com/ipfs/go-ipfs-api
+          go get github.com/mjibson/esc
+      - name: Build libipfs
+        run: |
+          if [[ "${DARWIN}" == 0 ]]; then make build_linux && make build_windows; else make build_macos; fi
+      - name: Pacakge artifacts
+        run: |
+          mkdir libipfs-${{ github.ref }}-all-platforms/
+          cp -rf ./bin/* libipfs-${{ github.ref }}-all-platforms/
+          zip -r libipfs-${{ github.ref }}-all-platforms.zip libipfs-${{ github.ref }}-all-platforms/
+      - name: Upload aritifacts
+        uses: actions/upload-release-asset@v1
+        env:
+          GITHUB_TOKEN: ${{ github.token }}
+        with:
+          upload_url: ${{ steps.create_release.outputs.upload_url }}
+          asset_path: ./libipfs-${{ github.ref }}-all-platforms-x64.zip
+          asset_name: libipfs-${{ github.ref }}-all-platforms-x64.zip
+          asset_content_type: application/zip
