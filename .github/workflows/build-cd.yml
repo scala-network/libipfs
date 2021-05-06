@@ -11,18 +11,17 @@ jobs:
       matrix:
         os: [macos-latest, ubuntu-latest]
     steps:
-    - name: Create new release
-      uses: actions/create-release@v1
-      id: create_release
-      with:
-        draft: true
-        prerelease: false
-        release_name: libipfs-${{ github.ref }}
-        tag_name: ${{ github.ref }}
-        body_path: CHANGELOG.md
-      env:
-        GITHUB_TOKEN: ${{ github.token }}
-    steps:
+      - name: Create new release
+        uses: actions/create-release@v1
+        id: create_release
+        with:
+          draft: false
+          prerelease: true
+          release_name: libipfs-${{ github.ref }}
+          tag_name: ${{ github.ref }}
+          body_path: CHANGELOG.md
+        env:
+          GITHUB_TOKEN: ${{ github.token }}
       - name: Install go
         uses: actions/setup-go@v2
         with:
