@@ -11,6 +11,8 @@ jobs:
       matrix:
         os: [macos-latest, ubuntu-latest]
     steps:
+      - name: Checkout code
+        uses: actions/checkout@v2
       - name: Create new release
         uses: actions/create-release@v1
         id: create_release
@@ -26,8 +28,6 @@ jobs:
         uses: actions/setup-go@v2
         with:
           go-version: 1.16.x
-      - name: Checkout code
-        uses: actions/checkout@v2
       - name: Set platform flag
         run: |
           if [[ ${{matrix.TARGET}} == *x86_64-apple-darwin* ]]; then DARWIN=1; else DARWIN=0 ; fi
