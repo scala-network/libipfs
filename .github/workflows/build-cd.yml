@@ -37,13 +37,12 @@ jobs:
           go get github.com/sirupsen/logrus
           go get github.com/ipfs/go-ipfs-api
           go get github.com/mjibson/esc
-      - name: Build libipfs
+      - name: Build libipfs for windows & linux
         if: ${{ matrix.os == 'ubuntu-latest' }}
-        run: |
-          make build_linux && make build_windows
+        run: make build_linux && make build_windows
+      - name: Build libipfs for macOS
         if: ${{ matrix.os == 'macos-latest' }}
-        run: |
-          make build_macos
+        run: make build_macos
       - name: Pacakge artifacts
         run: |
           mkdir libipfs-${{ github.ref }}-all-platforms/
