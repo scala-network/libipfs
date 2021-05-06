@@ -22,7 +22,8 @@ jobs:
           draft: false
           prerelease: true
 
-  create-release:
+  build-and-publish:
+    name: Publish release
     runs-on: ${{ matrix.os }}
     strategy:
       matrix:
@@ -45,31 +46,43 @@ jobs:
           go get github.com/mjibson/esc
       - name: Build libipfs for windows & linux
         if: ${{ matrix.os == 'ubuntu-latest' }}
-        run: make build_linux && make build_windows
+        run: make build_linux
       - name: Build libipfs for macOS
         if: ${{ matrix.os == 'macos-latest' }}
         run: make build_macos
-      - name: Pacakge artifacts linux and windows
+
+      - name: Pacakge artifacts linux
         if: ${{ matrix.os == 'ubuntu-latest' }}
         run: |
-          mkdir libipfs-${{ github.ref }}-win-x64/
-          cp -rf ./bin/libipfs-windows* libipfs-${{ github.ref }}-win-x64/
-          zip -r libipfs-${{ github.ref }}-win-x64.zip libipfs-${{ github.ref }}-win-x64/
-          mkdir libipfs-${{ github.ref }}-linux-x64/
-          cp -rf ./bin/libipfs-linux* libipfs-${{ github.ref }}-linux-x64/
-          zip -r libipfs-${{ github.ref }}-linux-x64.zip libipfs-${{ github.ref }}-linux-x64/
+          mkdir libipfs-${{ github.event.release.tag_name }}-linux-x64/
+          cp -rf ./bin/libipfs-linux* libipfs-${{ github.event.release.tag_name }}-linux-x64/
+          zip -r libipfs-${{ github.event.release.tag_name }}-linux-x64.zip libipfs-${{ github.event.release.tag_name }}-linux-x64/
+
       - name: Pacakge artifacts macOS
         if: ${{ matrix.os == 'macos-latest' }}
         run: |
-          mkdir libipfs-${{ github.ref }}-macOS-x64/
-          cp -rf ./bin/* libipfs-${{ github.ref }}-macOS-x64/
-          zip -r libipfs-${{ github.ref }}-macOS-x64.zip libipfs-${{ github.ref }}-macOS-x64/
-      - name: Upload aritifacts
+          mkdir libipfs-${{ github.event.release.tag_name }}-macOS-x64/
+          cp -rf ./bin/* libipfs-${{ github.event.release.tag_name }}-macOS-x64/
+          zip -r libipfs-${{ github.event.release.tag_name }}-macOS-x64.zip libipfs-${{ github.event.release.tag_name }}-macOS-x64/
+
+      - name: Upload aritifacts for linux
+        if: ${{ matrix.os == 'ubuntu-latest' }}
         uses: actions/upload-release-asset@v1
         env:
           GITHUB_TOKEN: ${{ github.token }}
         with:
           upload_url: ${{ needs.create_release.outputs.upload_url }}
-          asset_path: ./libipfs-${{ github.ref }}-all-platforms-x64.zip
-          asset_name: libipfs-${{ github.ref }}-all-platforms-x64.zip
+          asset_path: ./libipfs-${{ github.event.release.tag_name }}-linux-x64.zip
+          asset_name: libipfs-${{ github.event.release.tag_name }}-linux-x64.zip
+          asset_content_type: application/zip
+          
+      - name: Upload aritifacts for macOS
+        if: ${{ matrix.os == 'ubuntu-latest' }}
+        uses: actions/upload-release-asset@v1
+        env:
+          GITHUB_TOKEN: ${{ github.token }}
+        with:
+          upload_url: ${{ needs.create_release.outputs.upload_url }}
+          asset_path: ./libipfs-${{ github.event.release.tag_name }}-macOS-x64.zip
+          asset_name: libipfs-${{ github.event.release.tag_name }}-macOS-x64.zip
           asset_content_type: application/zip
