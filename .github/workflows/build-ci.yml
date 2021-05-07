@@ -47,6 +47,8 @@ jobs:
       run: |
         export GOROOT=/mingw64/lib/go
         export GOPATH=/mingw64
+    - name: Log PATH
+      run: echo $PATH
     - name: Install go dependencies
       run: |
         go get github.com/sirupsen/logrus
