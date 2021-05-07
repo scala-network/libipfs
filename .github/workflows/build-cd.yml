@@ -11,6 +11,8 @@ jobs:
     outputs:
       upload_url: ${{ steps.step_upload_url.outputs.upload_url }}
     steps:
+      - name: Checkout code
+        uses: actions/checkout@v2
       - name: Create release
         id: create_release
         uses: actions/create-release@v1
@@ -18,9 +20,10 @@ jobs:
           GITHUB_TOKEN: ${{ github.token }}
         with:
           tag_name: ${{ github.ref }}
-          release_name: Release ${{ github.ref }}
+          release_name: libipfs Release ${{ github.ref }}
           draft: false
-          prerelease: true
+          prerelease: false
+          body_path: CHANGELOG.md
       - id: step_upload_url
         run: echo "::set-output name=upload_url::${{ steps.create_release.outputs.upload_url }}"
 
