@@ -1,15 +1,15 @@
-name: CD-Release
+name: Release
 on:
   push:
     tags:
       - '*'
 
 jobs:
-  create_release:
+  create-release:
     name: Create release
     runs-on: ubuntu-latest
     outputs:
-      upload_url: ${{ steps.create_release.outputs.upload_url }}
+      upload_url: ${{ steps.step_upload_url.outputs.upload_url }}
     steps:
       - name: Create release
         id: create_release
@@ -21,6 +21,8 @@ jobs:
           release_name: Release ${{ github.ref }}
           draft: false
           prerelease: true
+      - id: step_upload_url
+        run: echo "::set-output name=upload_url::${{ steps.create_release.outputs.upload_url }}"
 
   build-and-publish:
     name: Publish release
@@ -44,9 +46,11 @@ jobs:
           go get github.com/sirupsen/logrus
           go get github.com/ipfs/go-ipfs-api
           go get github.com/mjibson/esc
+
       - name: Build libipfs for windows & linux
         if: ${{ matrix.os == 'ubuntu-latest' }}
         run: make build_linux
+
       - name: Build libipfs for macOS
         if: ${{ matrix.os == 'macos-latest' }}
         run: make build_macos
@@ -71,18 +75,18 @@ jobs:
         env:
           GITHUB_TOKEN: ${{ github.token }}
         with:
-          upload_url: ${{ needs.create_release.outputs.upload_url }}
+          upload_url: ${{ needs.create-release.outputs.upload_url }}
           asset_path: ./libipfs-${{ github.event.release.tag_name }}-linux-x64.zip
           asset_name: libipfs-${{ github.event.release.tag_name }}-linux-x64.zip
           asset_content_type: application/zip
           
       - name: Upload aritifacts for macOS
-        if: ${{ matrix.os == 'ubuntu-latest' }}
+        if: ${{ matrix.os == 'macos-latest' }}
         uses: actions/upload-release-asset@v1
         env:
           GITHUB_TOKEN: ${{ github.token }}
         with:
-          upload_url: ${{ needs.create_release.outputs.upload_url }}
+          upload_url: ${{ needs.create-release.outputs.upload_url }}
           asset_path: ./libipfs-${{ github.event.release.tag_name }}-macOS-x64.zip
           asset_name: libipfs-${{ github.event.release.tag_name }}-macOS-x64.zip
           asset_content_type: application/zip
