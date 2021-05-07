@@ -30,7 +30,7 @@ jobs:
     runs-on: ${{ matrix.os }}
     strategy:
       matrix:
-        os: [macos-latest, ubuntu-latest]
+        os: [macos-latest, ubuntu-latest, ubuntu-18.04]
     steps:
       - name: Checkout code
         uses: actions/checkout@v2
@@ -38,19 +38,27 @@ jobs:
         uses: actions/setup-go@v2
         with:
           go-version: 1.16.x
-      - name: Install dependencies
+      - name: Install dependencies for linux build
         if: ${{ matrix.os == 'ubuntu-latest' }}
         run: |
-          sudo apt update && sudo apt install -y build-essential zip gcc-mingw-w64-x86-64 g++-mingw-w64-x86-64 wine64
+          sudo apt update && sudo apt install -y build-essential zip
+      -name: Install dependencies for windows build
+        if: ${{ matrix.os == 'ubuntu-18.04' }}
+        run: |
+          sudo apt update && sudo apt install -y gcc-mingw-w64-x86-64 g++-mingw-w64-x86-64 wine64
       - name: Install go dependencies
         run: |
           go get github.com/sirupsen/logrus
           go get github.com/ipfs/go-ipfs-api
           go get github.com/mjibson/esc
 
-      - name: Build libipfs for windows & linux
+      - name: Build libipfs for linux
         if: ${{ matrix.os == 'ubuntu-latest' }}
         run: make build_linux
+
+      - name: Build libipfs for windows
+        if: ${{ matrix.os == 'ubuntu-18.04' }}
+        run: make build_windows
 
       - name: Build libipfs for macOS
         if: ${{ matrix.os == 'macos-latest' }}
@@ -59,16 +67,23 @@ jobs:
       - name: Pacakge artifacts linux
         if: ${{ matrix.os == 'ubuntu-latest' }}
         run: |
-          mkdir libipfs-${{ github.event.release.tag_name }}-linux-x64/
-          cp -rf ./bin/libipfs-linux* libipfs-${{ github.event.release.tag_name }}-linux-x64/
-          zip -r libipfs-${{ github.event.release.tag_name }}-linux-x64.zip libipfs-${{ github.event.release.tag_name }}-linux-x64/
+          mkdir libipfs${{ github.event.release.tag_name }}-linux-x64/
+          cp -rf ./bin/libipfs-linux* libipfs${{ github.event.release.tag_name }}-linux-x64/
+          zip -r libipfs${{ github.event.release.tag_name }}-linux-x64.zip libipfs${{ github.event.release.tag_name }}-linux-x64/
+
+      - name: Pacakge artifacts windows
+        if: ${{ matrix.os == 'ubuntu-18.04' }}
+        run: |
+          mkdir libipfs${{ github.event.release.tag_name }}-win-x64/
+          cp -rf ./bin/libipfs-win* libipfs${{ github.event.release.tag_name }}-win-x64/
+          zip -r libipfs${{ github.event.release.tag_name }}-win-x64.zip libipfs${{ github.event.release.tag_name }}-win-x64/
 
       - name: Pacakge artifacts macOS
         if: ${{ matrix.os == 'macos-latest' }}
         run: |
-          mkdir libipfs-${{ github.event.release.tag_name }}-macOS-x64/
-          cp -rf ./bin/* libipfs-${{ github.event.release.tag_name }}-macOS-x64/
-          zip -r libipfs-${{ github.event.release.tag_name }}-macOS-x64.zip libipfs-${{ github.event.release.tag_name }}-macOS-x64/
+          mkdir libipfs${{ github.event.release.tag_name }}-macOS-x64/
+          cp -rf ./bin/libipfs-mac* libipfs${{ github.event.release.tag_name }}-macOS-x64/
+          zip -r libipfs${{ github.event.release.tag_name }}-macOS-x64.zip libipfs${{ github.event.release.tag_name }}-macOS-x64/
 
       - name: Upload aritifacts for linux
         if: ${{ matrix.os == 'ubuntu-latest' }}
@@ -77,8 +92,19 @@ jobs:
           GITHUB_TOKEN: ${{ github.token }}
         with:
           upload_url: ${{ needs.create-release.outputs.upload_url }}
-          asset_path: ./libipfs-${{ github.event.release.tag_name }}-linux-x64.zip
-          asset_name: libipfs-${{ github.event.release.tag_name }}-linux-x64.zip
+          asset_path: ./libipfs${{ github.event.release.tag_name }}-linux-x64.zip
+          asset_name: libipfs${{ github.event.release.tag_name }}-linux-x64.zip
+          asset_content_type: application/zip
+
+      - name: Upload aritifacts for windows
+        if: ${{ matrix.os == 'ubuntu-18.04' }}
+        uses: actions/upload-release-asset@v1
+        env:
+          GITHUB_TOKEN: ${{ github.token }}
+        with:
+          upload_url: ${{ needs.create-release.outputs.upload_url }}
+          asset_path: ./libipfs${{ github.event.release.tag_name }}-win-x64.zip
+          asset_name: libipfs${{ github.event.release.tag_name }}-win-x64.zip
           asset_content_type: application/zip
           
       - name: Upload aritifacts for macOS
@@ -88,6 +114,6 @@ jobs:
           GITHUB_TOKEN: ${{ github.token }}
         with:
           upload_url: ${{ needs.create-release.outputs.upload_url }}
-          asset_path: ./libipfs-${{ github.event.release.tag_name }}-macOS-x64.zip
-          asset_name: libipfs-${{ github.event.release.tag_name }}-macOS-x64.zip
+          asset_path: ./libipfs${{ github.event.release.tag_name }}-macOS-x64.zip
+          asset_name: libipfs${{ github.event.release.tag_name }}-macOS-x64.zip
           asset_content_type: application/zip
