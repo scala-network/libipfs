@@ -1,4 +1,4 @@
-name: Build
+name: Build Test
 on: [push, pull_request]
 
 jobs:
@@ -21,7 +21,6 @@ jobs:
     - name: Build libipfs
       run: make build_linux
 
-
   build-windows:
     runs-on: windows-latest
     env:
@@ -43,11 +42,11 @@ jobs:
     - uses: eine/setup-msys2@v2
       with:
         update: true
-        install: mingw-w64-x86_64-toolchain make mingw-w64-x86_64-cmake mingw-w64-x86_64-ccache mingw-w64-x86_64-boost mingw-w64-x86_64-openssl mingw-w64-x86_64-zeromq mingw-w64-x86_64-libsodium mingw-w64-x86_64-hidapi mingw-w64-x86_64-protobuf-c mingw-w64-x86_64-libusb git
-    - name: Install Go
-      uses: actions/setup-go@v2
-      with:
-        go-version: 1.16.x
+        install: mingw-w64-x86_64-go mingw-w64-x86_64-toolchain make mingw-w64-x86_64-cmake mingw-w64-x86_64-ccache mingw-w64-x86_64-boost mingw-w64-x86_64-openssl mingw-w64-x86_64-zeromq mingw-w64-x86_64-libsodium mingw-w64-x86_64-hidapi mingw-w64-x86_64-protobuf-c mingw-w64-x86_64-libusb git
+    - name: Set GOROOT and GOPATH
+      run: |
+        export GOROOT=/mingw64/lib/go
+        export GOPATH=/mingw64
     - name: Install go dependencies
       run: |
         go get github.com/sirupsen/logrus
