@@ -11,7 +11,7 @@ jobs:
         go-version: 1.16.x
     - name: Checkout code
       uses: actions/checkout@v2
-    - name: Install linux dependencies
+    - name: Install linux build dependencies
       run: sudo apt update && sudo apt install -y build-essential
     - name: Install go dependencies
       run: |
@@ -30,7 +30,7 @@ jobs:
         go-version: 1.16.x
     - name: Checkout code
       uses: actions/checkout@v2
-    - name: Install linux dependencies
+    - name: Install windows build dependencies
       run: sudo apt update && sudo apt install -y build-essential gcc-mingw-w64-x86-64 g++-mingw-w64-x86-64 wine64
     - name: Install go dependencies
       run: |
