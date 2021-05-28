@@ -8,7 +8,7 @@ jobs:
     - name: Install Go
       uses: actions/setup-go@v2
       with:
-        go-version: 1.16.x
+        go-version: '1.16.x'
     - name: Checkout code
       uses: actions/checkout@v2
     - name: Install linux build dependencies
@@ -27,7 +27,7 @@ jobs:
     - name: Install Go
       uses: actions/setup-go@v2
       with:
-        go-version: 1.16.x
+        go-version: '1.16.x'
     - name: Checkout code
       uses: actions/checkout@v2
     - name: Install windows build dependencies
@@ -46,7 +46,7 @@ jobs:
     - name: Install Go
       uses: actions/setup-go@v2
       with:
-        go-version: 1.16.x
+        go-version: '1.13'
     - name: Checkout code
       uses: actions/checkout@v2
     - name: Install go dependencies
