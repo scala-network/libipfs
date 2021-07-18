@@ -1,7 +1,5 @@
 # libIPFS
-[![CI-Build](https://github.com/scala-network/libipfs/actions/workflows/build-ci.yml/badge.svg)](https://github.com/scala-network/libipfs/actions/workflows/build-ci.yml)
-
-A C-style library library that wraps around go-ipfs and provides a simple API.
+A C-style library library that wraps around go-ipfs as a library(not an executable that is embedded) and provides a very simple API.
 
 ## Example
 
@@ -10,21 +8,12 @@ A C-style library library that wraps around go-ipfs and provides a simple API.
 #include <iostream>
 
 int main() {
-
-/* Starts the IPFS node */
-std::cout << IPFSStartNode("./") << std::endl;
-
-/* Add a custom bootstrap */
-/* std::cout << BootstrapAdd("/ip4/127.0.0.1/tcp/4001/p2p/12D3KooWJjbW3sQPpvsA5saTZfihc2xQ1dwN2xXog2xAZYifQFmR") << std::endl; */
-
-/* Resolve an IPNS name */
-std::cout << ResolveIPNS("12D3KooWJjbW3sQPpvsA5saTZfihc2xQ1dwN2xXog2xAZYifQFmR") << std::endl;
-
-/* Add a directory to IPFS */
-std::cout << AddDirectory("./test") << std::endl;
-
-/* Stop IPFS Node */
-std::cout << IPFSStopNode() << std::endl;
+    /* Starts the IPFS node */
+    std::cout << IPFSStartNode("./") << std::endl;
+    /* Resolve an IPNS name */
+    std::cout << ResolveIPNSName("/ipns/ipfs.io") << std::endl;
+    /* Stop IPFS Node */
+    std::cout << IPFSStopNode() << std::endl;
 }
 ```
 
@@ -32,9 +21,9 @@ std::cout << IPFSStopNode() << std::endl;
 
 libIPFS is used by the Scala Network Project to retrieve and publish critical information on to IPFS.
 
-It runs a full blown IPFS instance and even exposes the HTTP API and Gateway of the underlying daemon.
+It runs a barebones IPFS instance and provides functions to be called from C/C++.
 
-### Why Go and not C or C++
+### Why?
 
 Currently, no simple implementation or API exists for IPFS in C or C++. Instead of writing, or re-writing, large parts of IPFS in C or C++ we rather use Go and compile it to a C or C++ compatible library. IPFS is implemented in Go already.
 
@@ -42,20 +31,21 @@ Currently, no simple implementation or API exists for IPFS in C or C++. Instead 
 
 #### Requirements
 
-* go >= 1.14.2
+* go >= 1.16
 * make >= 4.2.1
 * gcc and g++ >= 9.3.0
 
 To build the library you can use the following commands, the outputs can be found in bin/
 
 ```bash
-go get github.com/sirupsen/logrus
-go get github.com/ipfs/go-ipfs-api
-go get github.com/mjibson/esc
+go mod download
+make build
+```
 
-git clone https://github.com/scala-network/libipfs
-cd libipfs/
-make
+You **need** an actual mac to build mac binaries, run:
+
+```
+make build build_macos_x64 or build_macos_arm64
 ```
 
 ###  LICENSE
