@@ -1,22 +1,18 @@
 // package name: libipfs
 package main
 
-import "C"
 import (
+	"C"
 	"encoding/json"
 	"fmt"
-	"path/filepath"
+
 	"github.com/scala-network/libipfs/src/ipfs"
+	"github.com/scala-network/libipfs/src/constants"
 )
 
-var ipfsNode *ipfs.IPFS
 
-// Result holds the seedlist and any error that occurred in the process
-// for the daemon to use
 type Result struct {
-	// Status for the result
 	Status string
-	// Message to be displayed
 	Message string
 }
 
@@ -25,34 +21,30 @@ func main() {
 	// CGO compiler to compile the package as C library
 }
 
-/**
- * libipfs implements the C-style library for fetching information
- * from ZeroNet and IPFS.
- * Here we only have 3 exported functions that can be called from C
- */
-
 //export IPFSStartNode
-// IPFSStartNode starts the IPFS node and initializes ZeroNet
-func IPFSStartNode(dataPath *C.char) *C.char {
-	// result is marshalled to JSON before being returned to the daemon
+func IPFSStartNode(dataPath *C.char, P2PPort int) *C.char {
+
+	gDp := C.GoString(dataPath)
+
+	if (gDp == "") {
+		gDp = constants.DefaultRepoPath
+	}
+
+	if (P2PPort == 0) {
+		P2PPort = constants.DefaultP2PPort
+	}
+
 	result := Result{
 		Status:  "ok",
-		Message: fmt.Sprintf("IPFS node started on port 11816"),
+		Message: fmt.Sprintf("IPFS node started on port %d", P2PPort),
 	}
-	var err error
-	basePath := C.GoString(dataPath)
 
-	ipfsNode, err = ipfs.New(filepath.Join(basePath, "ipfs"))
+	err := ipfs.Start(gDp, P2PPort)
+
 	if err != nil {
 		result.Status = "err"
 		result.Message = fmt.Sprintf("Unable to create IPFS node: %s\n", err)
 		return toCJSONString(result)
-	}
-
-	err = ipfsNode.Start()
-	if err != nil {
-		result.Status = "err"
-		result.Message = fmt.Sprintf("Unable to start IPFS node: %s\n", err)
 	}
 
 	return toCJSONString(result)
@@ -60,12 +52,12 @@ func IPFSStartNode(dataPath *C.char) *C.char {
 
 //export IPFSStopNode
 func IPFSStopNode() *C.char{
-	result:= Result{
+	result := Result{
 		Status:  "ok",
 		Message: fmt.Sprintf("IPFS node stopped"),
 	}
 
-    err := ipfsNode.Stop()
+    err := ipfs.Stop()
     
     if err != nil {
         result.Status = "err"
@@ -75,133 +67,97 @@ func IPFSStopNode() *C.char{
     return toCJSONString(result)
 }
 
-//export ResolveIPNS
-func ResolveIPNS(peerID *C.char) *C.char{
+//export ResolveIPNSName
+func ResolveIPNSName(name *C.char) *C.char {
+	result := Result{
+		Status: "ok",
+		Message: "",
+	}
 
-	var err error
-	var hash string
-	var result Result
-
-	hash, err = ipfsNode.Resolve(C.GoString(peerID))
-
+	resolvedPath, err := ipfs.ResolveName(C.GoString(name))
+	
 	if err != nil {
 		result.Status = "err"
-		result.Message = fmt.Sprintf("Could not resolve peer ID: %s\n",err)
-	}else{
-		result.Status = "ok"
-		result.Message = fmt.Sprintf("%s", hash)
+		result.Message = fmt.Sprintf("Name couldn't be resolved %s", err.Error())
+	} else {
+		result.Message = resolvedPath
 	}
 
 	return toCJSONString(result)
 }
 
-//export AddDirectory
-func AddDirectory(directory *C.char) *C.char{
-
-	var err error
-	var hash string
-	var result Result
-
-	hash, err = ipfsNode.AddDirectory(C.GoString(directory))
-
-	if err != nil {
-		result.Status = "err"
-		result.Message = fmt.Sprintf("%s",err)
-	}else{
-		result.Status = "ok"
-		result.Message = fmt.Sprintf("%s", hash)
+//export PublishIPFSName
+func PublishIPFSName(ipfsHash *C.char) *C.char {
+	result := Result{
+		Status: "ok",
+		Message: "",
 	}
 
-	return toCJSONString(result)
-}
-
-//export BootstrapAdd
-func BootstrapAdd(peer *C.char) *C.char{
-
-	var err error
-	var response string
-	var result Result
-
-	peerArray := []string{C.GoString(peer)}
-	response, err = ipfsNode.BootstrapAdd(peerArray)
-
+	name, err := ipfs.PublishName(C.GoString(ipfsHash))
 	if err != nil {
 		result.Status = "err"
-		result.Message = fmt.Sprintf("%s",err)
-	}else{
-		result.Status = "ok"
-		result.Message = fmt.Sprintf("%s", response)
+		result.Message = fmt.Sprintf("Couldn't publish to IPNS %s", err.Error())
+	} else {
+		result.Message = name
 	}
 
 	return toCJSONString(result)
 }
 
 //export GetPeerID
-func GetPeerID() *C.char{
-
-	var err error
-	var response string
-	var result Result
-
-	response, err = ipfsNode.GetPeerID()
-
-	if err != nil {
-		result.Status = "err"
-		result.Message = fmt.Sprintf("%s",err)
-	}else{
-		result.Status = "ok"
-		result.Message = fmt.Sprintf("%s", response)
+func GetPeerID() *C.char {
+	peerId := ipfs.GetPeerID()
+	result := Result{
+		Status: "ok",
+		Message: peerId,
 	}
 
 	return toCJSONString(result)
 }
 
-//export PublishToIPNS
-func PublishToIPNS(contentHash *C.char) *C.char{
+//export IpfsAdd
+func IpfsAdd(addPath *C.char) *C.char {
+	result := Result{
+		Status: "ok",
+		Message: "",
+	}
 
-	var err error
-	var response string
-	var result Result
-
-	response, err = ipfsNode.PublishName(C.GoString(contentHash))
+	ipfsHash, err := ipfs.Add(C.GoString(addPath))
 
 	if err != nil {
 		result.Status = "err"
-		result.Message = fmt.Sprintf("%s",err)
-	}else{
-		result.Status = "ok"
-		result.Message = fmt.Sprintf("%s", response)
+		result.Message = fmt.Sprintf("Couldn't add to IPFS %s", err.Error())
+	} else {
+		result.Message = ipfsHash
 	}
 
 	return toCJSONString(result)
 }
 
-//export Cat
-func Cat(toView *C.char) *C.char{
+//export IpfsGet
+func IpfsGet(ipfsHash *C.char, downloadPath *C.char) *C.char {
+	result := Result{
+		Status: "ok",
+		Message: "",
+	}
 
-	var err error
-	var response string
-	var result Result
+	err := ipfs.Get(C.GoString(ipfsHash), C.GoString(downloadPath))
 
-	response, err = ipfsNode.Cat(C.GoString(toView))
-
-	if err != nil {
+	if (err != nil) {
 		result.Status = "err"
-		result.Message = fmt.Sprintf("%s",err)
-	}else{
+		result.Message = fmt.Sprintf("Couldn't download from IPFS %s", err.Error())
+	} else {
 		result.Status = "ok"
-		result.Message = fmt.Sprintf("%s", response)
+		result.Message = fmt.Sprintf("Downloaded hash %s to %s", C.GoString(ipfsHash), C.GoString(downloadPath))
 	}
 
 	return toCJSONString(result)
 }
 
-// toCJSONString marshals the error result into JSON for the daemon to
-// understand and returns it in the required C format
 func toCJSONString(result Result) *C.char {
 	resultJSON, err := json.Marshal(result)
 	if err != nil {
-		panic(fmt.Errorf("Fatal error converting result: %s", err))
+		panic(fmt.Errorf("Fatal error converting result: %s", err.Error()))
 	}
 	return C.CString(string(resultJSON))
 }
