@@ -1,21 +1,5 @@
-# Binaries for programs and plugins
-*.dll
-*.so
-*.dylib
-
-# Test binary, build with `go test -c`
-*.test
-
-# Output of the go coverage tool, specifically when used with LiteIDE
-*.out
-/.project
-
-# Build output
 bin/
-
-src/ipfs/pack.go
-
-example/ipfs/
-example/libipfs-linux.a
-example/libipfs-linux.h
-example/usage
+example/.libipfs-repo/
+example/libipfs-*
+example/test-download.jpg
+.vscode/
