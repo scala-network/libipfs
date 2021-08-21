@@ -1,5 +1,7 @@
 Changelog
-[1.0.1] - 29-05-2021
+[2.0.0] - 21-08-2021
 Features
 
-    Use go version 1.13
+    * No longer embeds IPFS binary
+    * Only single port exposed (11816 for P2P communication)
+    * Faster to use and build
