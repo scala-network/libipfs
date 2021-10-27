@@ -13,6 +13,7 @@ import (
 	"github.com/ipfs/go-ipfs/core"
 	"github.com/ipfs/go-ipfs/core/coreapi"
 	"github.com/scala-network/libipfs/src/constants"
+	"github.com/scala-network/libipfs/src/utils"
 
 	files "github.com/ipfs/go-ipfs-files"
 	icore "github.com/ipfs/interface-go-ipfs-core"
@@ -27,17 +28,16 @@ var ipfsApiAll icore.CoreAPI
 var ctxAll context.Context
 
 func createRepo(ctx context.Context, dataPath string, P2PPort int) (string, error) {
-	cwd, _ := os.Getwd()
-	repoPath := filepath.Join(cwd, dataPath)
+	repoPath := dataPath
+	
+	if !(utils.IsDir(repoPath)) {
+		err := os.MkdirAll(repoPath, 0755)
 
-	if _, err := os.Stat(repoPath); !os.IsNotExist(err) {
+		if err != nil {
+			return "", fmt.Errorf("Failed to get repo directory: %s", err)
+		}
+	} else {
 		return repoPath, nil
-	}
-
-	err := os.Mkdir(dataPath, 0755)
-
-	if err != nil {
-		return "", fmt.Errorf("Failed to get repo directory: %s", err)
 	}
 
 	cfg, err := config.Init(ioutil.Discard, 2048)
