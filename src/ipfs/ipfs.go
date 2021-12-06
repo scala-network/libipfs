@@ -7,6 +7,7 @@ import (
 	"context"
 	"path/filepath"
 	"io/ioutil"
+	"sync"
 
 	"github.com/ipfs/go-ipfs/plugin/loader"
 	"github.com/ipfs/go-ipfs/repo/fsrepo"
@@ -14,6 +15,7 @@ import (
 	"github.com/ipfs/go-ipfs/core/coreapi"
 	"github.com/scala-network/libipfs/src/constants"
 	"github.com/scala-network/libipfs/src/utils"
+	"github.com/libp2p/go-libp2p-core/peer"
 
 	files "github.com/ipfs/go-ipfs-files"
 	icore "github.com/ipfs/interface-go-ipfs-core"
@@ -21,11 +23,42 @@ import (
 	config "github.com/ipfs/go-ipfs-config"
 	libp2p "github.com/ipfs/go-ipfs/core/node/libp2p"
 	options "github.com/ipfs/interface-go-ipfs-core/options"
+	ma "github.com/multiformats/go-multiaddr"
 )
 
 var ipfsCoreAll *core.IpfsNode
 var ipfsApiAll icore.CoreAPI
 var ctxAll context.Context
+
+func connectToPeers(ctx context.Context, ipfs icore.CoreAPI, peers []string) (error) {
+	var wg sync.WaitGroup
+	peerInfos := make(map[peer.ID]*peer.AddrInfo, len(peers))
+	for _, addrStr := range peers {
+		addr, err := ma.NewMultiaddr(addrStr)
+		if err != nil {
+			return err
+		}
+		pii, err := peer.AddrInfoFromP2pAddr(addr)
+		if err != nil {
+			return err
+		}
+		pi, ok := peerInfos[pii.ID]
+		if !ok {
+			pi = &peer.AddrInfo{ID: pii.ID}
+			peerInfos[pi.ID] = pi
+		}
+		pi.Addrs = append(pi.Addrs, pii.Addrs...)
+	}
+
+	wg.Add(len(peerInfos))
+	for _, peerInfo := range peerInfos {
+		go func(peerInfo *peer.AddrInfo) {
+			defer wg.Done()
+		}(peerInfo)
+	}
+	wg.Wait()
+	return nil
+}
 
 func createRepo(ctx context.Context, dataPath string, P2PPort int) (string, error) {
 	repoPath := dataPath
@@ -141,6 +174,7 @@ func Start(dataPath string, P2PPort int) (error) {
 	var err error
 	ctxAll = context.Background()
 	ipfsCoreAll, ipfsApiAll, err = spawnIpfsNode(ctxAll, dataPath, P2PPort)
+	err = connectToPeers(ctxAll, ipfsApiAll, constants.BootstrapNodes)
 
 	if err != nil {
 		return err
