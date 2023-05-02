@@ -1,11 +1,11 @@
 package constants
 
 const (
-	Lib_version = "v2.0.0"
-	Lib_name = "libipfs"
-	Lib_usage = "A C-Style library implemented in Go for using IPFS in C++/C."
+	Lib_version     = "v3.0.0"
+	Lib_name        = "libipfs"
+	Lib_usage       = "A C-Style library implemented in Go for using IPFS in C++/C."
 	DefaultRepoPath = ".libipfs-repo"
-	DefaultP2PPort = 11816
+	DefaultP2PPort  = 11816
 )
 
 var DefaultServerFilters = []string{
