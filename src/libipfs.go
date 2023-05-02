@@ -1,4 +1,3 @@
-// package name: libipfs
 package main
 
 import (
@@ -6,13 +5,12 @@ import (
 	"encoding/json"
 	"fmt"
 
-	"github.com/scala-network/libipfs/src/ipfs"
 	"github.com/scala-network/libipfs/src/constants"
+	"github.com/scala-network/libipfs/src/ipfs"
 )
 
-
 type Result struct {
-	Status string
+	Status  string
 	Message string
 }
 
@@ -26,11 +24,11 @@ func IPFSStartNode(dataPath *C.char, P2PPort int) *C.char {
 
 	gDp := C.GoString(dataPath)
 
-	if (gDp == "") {
+	if gDp == "" {
 		gDp = constants.DefaultRepoPath
 	}
 
-	if (P2PPort == 0) {
+	if P2PPort == 0 {
 		P2PPort = constants.DefaultP2PPort
 	}
 
@@ -51,31 +49,31 @@ func IPFSStartNode(dataPath *C.char, P2PPort int) *C.char {
 }
 
 //export IPFSStopNode
-func IPFSStopNode() *C.char{
+func IPFSStopNode() *C.char {
 	result := Result{
 		Status:  "ok",
 		Message: fmt.Sprintf("IPFS node stopped"),
 	}
 
-    err := ipfs.Stop()
-    
-    if err != nil {
-        result.Status = "err"
-        result.Message = fmt.Sprintf("IPFS node could not be stopped")
-    }
-    
-    return toCJSONString(result)
+	err := ipfs.Stop()
+
+	if err != nil {
+		result.Status = "err"
+		result.Message = fmt.Sprintf("IPFS node could not be stopped")
+	}
+
+	return toCJSONString(result)
 }
 
 //export ResolveIPNSName
 func ResolveIPNSName(name *C.char) *C.char {
 	result := Result{
-		Status: "ok",
+		Status:  "ok",
 		Message: "",
 	}
 
 	resolvedPath, err := ipfs.ResolveName(C.GoString(name))
-	
+
 	if err != nil {
 		result.Status = "err"
 		result.Message = fmt.Sprintf("Name couldn't be resolved %s", err.Error())
@@ -89,7 +87,7 @@ func ResolveIPNSName(name *C.char) *C.char {
 //export PublishIPFSName
 func PublishIPFSName(ipfsHash *C.char) *C.char {
 	result := Result{
-		Status: "ok",
+		Status:  "ok",
 		Message: "",
 	}
 
@@ -108,7 +106,7 @@ func PublishIPFSName(ipfsHash *C.char) *C.char {
 func GetPeerID() *C.char {
 	peerId := ipfs.GetPeerID()
 	result := Result{
-		Status: "ok",
+		Status:  "ok",
 		Message: peerId,
 	}
 
@@ -118,7 +116,7 @@ func GetPeerID() *C.char {
 //export IpfsAdd
 func IpfsAdd(addPath *C.char) *C.char {
 	result := Result{
-		Status: "ok",
+		Status:  "ok",
 		Message: "",
 	}
 
@@ -137,13 +135,13 @@ func IpfsAdd(addPath *C.char) *C.char {
 //export IpfsGet
 func IpfsGet(ipfsHash *C.char, downloadPath *C.char) *C.char {
 	result := Result{
-		Status: "ok",
+		Status:  "ok",
 		Message: "",
 	}
 
 	err := ipfs.Get(C.GoString(ipfsHash), C.GoString(downloadPath))
 
-	if (err != nil) {
+	if err != nil {
 		result.Status = "err"
 		result.Message = fmt.Sprintf("Couldn't download from IPFS %s", err.Error())
 	} else {

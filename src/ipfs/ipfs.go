@@ -1,26 +1,26 @@
 package ipfs
 
-
 import (
-	"fmt"
-	"os"
 	"context"
-	"path/filepath"
+	"fmt"
 	"io/ioutil"
+	"os"
+	"path/filepath"
 
-	"github.com/ipfs/go-ipfs/plugin/loader"
-	"github.com/ipfs/go-ipfs/repo/fsrepo"
-	"github.com/ipfs/go-ipfs/core"
-	"github.com/ipfs/go-ipfs/core/coreapi"
 	"github.com/scala-network/libipfs/src/constants"
 	"github.com/scala-network/libipfs/src/utils"
 
-	files "github.com/ipfs/go-ipfs-files"
-	icore "github.com/ipfs/interface-go-ipfs-core"
-	icorepath "github.com/ipfs/interface-go-ipfs-core/path"
-	config "github.com/ipfs/go-ipfs-config"
-	libp2p "github.com/ipfs/go-ipfs/core/node/libp2p"
-	options "github.com/ipfs/interface-go-ipfs-core/options"
+	icore "github.com/ipfs/boxo/coreiface"
+	opt "github.com/ipfs/boxo/coreiface/options"
+	icorepath "github.com/ipfs/boxo/coreiface/path"
+	"github.com/ipfs/boxo/files"
+
+	"github.com/ipfs/kubo/config"
+	"github.com/ipfs/kubo/core"
+	"github.com/ipfs/kubo/core/coreapi"
+	"github.com/ipfs/kubo/core/node/libp2p"
+	"github.com/ipfs/kubo/plugin/loader"
+	"github.com/ipfs/kubo/repo/fsrepo"
 )
 
 var ipfsCoreAll *core.IpfsNode
@@ -29,7 +29,7 @@ var ctxAll context.Context
 
 func createRepo(ctx context.Context, dataPath string, P2PPort int) (string, error) {
 	repoPath := dataPath
-	
+
 	if !(utils.IsDir(repoPath)) {
 		err := os.MkdirAll(repoPath, 0755)
 
@@ -84,7 +84,6 @@ func setupPlugins(externalPluginsPath string) error {
 	return nil
 }
 
-
 func createNode(ctx context.Context, repoPath string) (*core.IpfsNode, icore.CoreAPI, error) {
 	repo, err := fsrepo.Open(repoPath)
 	if err != nil {
@@ -94,7 +93,7 @@ func createNode(ctx context.Context, repoPath string) (*core.IpfsNode, icore.Cor
 	nodeOptions := &core.BuildCfg{
 		Online:  true,
 		Routing: libp2p.DHTOption,
-		Repo: repo,
+		Repo:    repo,
 	}
 
 	node, err := core.NewNode(ctx, nodeOptions)
@@ -106,7 +105,6 @@ func createNode(ctx context.Context, repoPath string) (*core.IpfsNode, icore.Cor
 
 	return node, coreapi, nil
 }
-
 
 func spawnIpfsNode(ctx context.Context, dataPath string, P2PPort int) (*core.IpfsNode, icore.CoreAPI, error) {
 	if err := setupPlugins(""); err != nil {
@@ -120,7 +118,6 @@ func spawnIpfsNode(ctx context.Context, dataPath string, P2PPort int) (*core.Ipf
 
 	return createNode(ctx, repoPath)
 }
-
 
 func getUnixfsNode(path string) (files.Node, error) {
 	st, err := os.Stat(path)
@@ -136,8 +133,7 @@ func getUnixfsNode(path string) (files.Node, error) {
 	return f, nil
 }
 
-
-func Start(dataPath string, P2PPort int) (error) {
+func Start(dataPath string, P2PPort int) error {
 	var err error
 	ctxAll = context.Background()
 	ipfsCoreAll, ipfsApiAll, err = spawnIpfsNode(ctxAll, dataPath, P2PPort)
@@ -145,37 +141,37 @@ func Start(dataPath string, P2PPort int) (error) {
 	if err != nil {
 		return err
 	}
-	
+
 	return nil
 }
 
-func Stop() (error) {
+func Stop() error {
 	err := ipfsCoreAll.Close()
 
 	if err != nil {
 		return err
 	}
-		
+
 	return nil
 }
 
 func ResolveName(ipnsPath string) (string, error) {
-	opts := []options.NameResolveOption{}
+	opts := []opt.NameResolveOption{}
 	resolvedName, err := ipfsApiAll.Name().Resolve(ctxAll, ipnsPath, opts...)
 
 	if err != nil {
 		return "", err
-	} 
+	}
 
 	return resolvedName.String(), nil
 }
 
 func PublishName(ipfsHash string) (string, error) {
-	opts := []options.NamePublishOption{}
+	opts := []opt.NamePublishOption{}
 
 	pCid := icorepath.New(ipfsHash)
 	ipnsEntry, err := ipfsApiAll.Name().Publish(ctxAll, pCid, opts...)
-	
+
 	if err != nil {
 		return "", err
 	}
@@ -183,7 +179,7 @@ func PublishName(ipfsHash string) (string, error) {
 	return ipnsEntry.Name(), nil
 }
 
-func GetPeerID() (string) {
+func GetPeerID() string {
 	peerId := ipfsCoreAll.Identity
 	return peerId.String()
 }
@@ -214,7 +210,7 @@ func Get(hash string, downloadPath string) (err error) {
 
 	err = files.WriteTo(rootNode, downloadPath)
 
-	if (err != nil) {
+	if err != nil {
 		return err
 	}
 
