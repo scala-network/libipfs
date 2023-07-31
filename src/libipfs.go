@@ -132,6 +132,48 @@ func IpfsAdd(addPath *C.char) *C.char {
 	return toCJSONString(result)
 }
 
+//export IpfsPin
+func IpfsPin(ipfsHash *C.char) *C.char {
+	result := Result{
+		Status:  "ok",
+		Message: "",
+	}
+
+	err := ipfs.Pin(C.GoString(ipfsHash))
+
+	if err != nil {
+		result.Status = "err"
+		result.Message = fmt.Sprintf("Couldn't pin to IPFS %s", err.Error())
+	} else {
+		result.Message = fmt.Sprintf("Pinned hash %s", C.GoString(ipfsHash))
+	}
+
+	return toCJSONString(result)
+}
+
+//export IpfsGetPinnedHashes
+func IpfsGetPinnedHashes() *C.char {
+	result := Result{
+		Status:  "ok",
+		Message: "",
+	}
+
+	hashes, err := ipfs.GetPinnedHashes()
+
+	hG := make(map[string][]string)
+	hG["hashes"] = hashes
+	hJ, err := json.Marshal(hG)
+
+	if err != nil {
+		result.Status = "err"
+		result.Message = fmt.Sprintf("Couldn't get pinned hashes from IPFS %s", err.Error())
+	} else {
+		result.Message = fmt.Sprintf("%s", hJ)
+	}
+
+	return toCJSONString(result)
+}
+
 //export IpfsGet
 func IpfsGet(ipfsHash *C.char, downloadPath *C.char) *C.char {
 	result := Result{
