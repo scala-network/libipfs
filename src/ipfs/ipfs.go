@@ -200,6 +200,31 @@ func Add(AddPath string) (ipfsHash string, err error) {
 	return addedCid.String(), nil
 }
 
+func Pin(hash string) (err error) {
+	pinCid := icorepath.New(hash)
+	err = ipfsApiAll.Pin().Add(ctxAll, pinCid)
+
+	if err != nil {
+		return err
+	}
+
+	return nil
+}
+
+func GetPinnedHashes() (hashes []string, err error) {
+	pinnedHashes, err := ipfsApiAll.Pin().Ls(ctxAll)
+
+	if err != nil {
+		return nil, err
+	}
+
+	for hash := range pinnedHashes {
+		hashes = append(hashes, hash.Path().String())
+	}
+
+	return hashes, nil
+}
+
 func Get(hash string, downloadPath string) (err error) {
 	getCid := icorepath.New(hash)
 	rootNode, err := ipfsApiAll.Unixfs().Get(ctxAll, getCid)
