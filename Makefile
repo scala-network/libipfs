@@ -1,54 +1,61 @@
-.PHONY: default build fmt lint run run_race test clean vet docker_build docker_run docker_clean
+.PHONY: default build clean
 
+VERSION := 3.0.0
 LIB_NAME := libipfs
+SRC := ./${LIB_NAME}.go
+BIN_DIR := bin
+
+PLATFORMS := \
+	linux/amd64 \
+    freebsd/amd64 \
+    windows/amd64 \
+    darwin/amd64 \
+    darwin/arm64 \
+    linux/riscv64 \
+    linux/arm64
+
+# Define cross-compilers for each architecture
+CC_COMPILERS := \
+    freebsd/amd64=clang --target=x86_64-unknown-freebsd \
+    windows/amd64=x86_64-w64-mingw32-gcc \
+    linux/amd64=gcc \
+    linux/arm64=aarch64-linux-gnu-gcc \
+    linux/riscv64=riscv64-linux-gnu-gcc \
+    darwin/amd64=o64-clang \
+    darwin/arm64=o64-clang
+
+# Default target
 default: build
 
+# Clean target
 clean:
-		rm -rf bin/ && mkdir bin/
+	rm -rf $(BIN_DIR)/ && mkdir -p $(BIN_DIR) && cp -rf example.cpp $(BIN_DIR)/
 
-build_linux_x64:
-		CGO_ENABLED=1 \
-		GOOS=linux \
-		GOARCH=amd64 \
-		go build -buildmode=c-archive -o ./bin/${LIB_NAME}-linux.a ./src/${LIB_NAME}.go
+# Function to get the cross-compiler based on GOOS/GOARCH
+define GET_CC
+$(shell echo $(CC_COMPILERS) | tr ' ' '\n' | grep -E '$(1)/$(2)=' | cut -d= -f2)
+endef
 
-build_linux_arm64:
-		CGO_ENABLED=1 \
-		GOOS=linux \
-		GOARCH=arm64 \
-		go build -buildmode=c-archive -o ./bin/${LIB_NAME}-linux-arm64.a ./src/${LIB_NAME}.go
+# Build rule for each platform
+define BUILD_RULE
+build_$(1)_$(2):
+	@echo "Building for $(1)/$(2)..."
+	$(if $(filter $(1)/$(2),freebsd/amd64), \
+		env SYSROOT=/usr/local/freebsd-sysroot CGO_CFLAGS="--sysroot=/usr/local/freebsd-sysroot" CGO_LDFLAGS="--sysroot=/usr/local/freebsd-sysroot",) \
+	CGO_ENABLED=1 \
+	GOOS=$(1) \
+	GOARCH=$(2) \
+	CC=$(call GET_CC,$(1),$(2)) \
+	go build -buildmode=c-archive -o $(BIN_DIR)/${LIB_NAME}-$(1)-$(2).a $(SRC)
+.PHONY: build_$(1)_$(2)
+endef
 
-build_windows_x64:
-		CGO_ENABLED=1 \
-		GOOS=windows \
-		GOARCH=amd64 \
-		go build -buildmode=c-archive -o ./bin/${LIB_NAME}-windows.a ./src/${LIB_NAME}.go
+# Generate build rules for all platforms
+$(foreach plat, $(PLATFORMS), \
+	$(eval $(call BUILD_RULE,$(word 1,$(subst /, ,$(plat))),$(word 2,$(subst /, ,$(plat))))))
 
-build_linux_riscv:
-		CGO_ENABLED=1 \
-		GOOS=linux \
-		GOARCH=riscv64 \
-		go build -buildmode=c-archive -o ./bin/${LIB_NAME}-linux-riscv64.a ./src/${LIB_NAME}.go
+# Build all platforms
+build-all: $(foreach plat, $(PLATFORMS), build_$(subst /,_,$(plat)))
 
-build_darwin_x64:
-		CGO_ENABLED=1 \
-		GOOS=darwin \
-		GOARCH=amd64 \
-		go build -buildmode=c-archive -o ./bin/${LIB_NAME}-darwin.a ./src/${LIB_NAME}.go
-
-build_darwin_arm64:
-		CGO_ENABLED=1 \
-		GOOS=darwin \
-		GOARCH=arm64 \
-		go build -buildmode=c-archive -o ./bin/${LIB_NAME}-darwin-arm64.a ./src/${LIB_NAME}.go
-
-build_freebsd_x64:
-		CGO_ENABLED=1 \
-		GOOS=freebsd \
-		GOARCH=amd64 \
-		go build -buildmode=c-archive -o ./bin/${LIB_NAME}-freebsd.a ./src/${LIB_NAME}.go
-
-build-all: build_linux_x64 build_linux_arm64 build_windows_x64 build_linux_riscv build_darwin_x64 build_darwin_arm64 build_freebsd_x64
-
-build: clean \
-	build-all
+# Main build target
+build: clean build-all
