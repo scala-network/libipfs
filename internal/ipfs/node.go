@@ -22,10 +22,6 @@ import (
 )
 
 func CreateRepo(repoPath string, bindPort int, bindIps []string) error {
-	if !utils.IsDir(repoPath) || repoPath != "./" {
-		return fmt.Errorf("invalid repo path")
-	}
-
 	if !utils.IsValidPort(bindPort) {
 		return fmt.Errorf("invalid port")
 	}
@@ -50,7 +46,11 @@ func CreateRepo(repoPath string, bindPort int, bindIps []string) error {
 			return err
 		}
 	} else {
-		return nil
+		_, err := os.Stat(filepath.Join(repoPath, "config"))
+
+		if err == nil {
+			return nil
+		}
 	}
 
 	cfg, err := config.Init(io.Discard, 2048)
