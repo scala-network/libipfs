@@ -1,0 +1,72 @@
+name: Build
+
+on:
+  push: {}
+  pull_request: {}
+
+jobs:
+  build:
+    runs-on: ubuntu-22.04
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Set up Go
+        uses: actions/setup-go@v4
+        with:
+          go-version: '1.23.x'
+
+      - name: Install cross-compilation dependencies
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y \
+            gcc \
+            clang \
+            clang-tools \
+            g++-mingw-w64-x86-64 \
+            gcc-mingw-w64-x86-64 \
+            gcc-riscv64-linux-gnu \
+            g++-riscv64-linux-gnu \
+            gcc-aarch64-linux-gnu \
+            g++-aarch64-linux-gnu \
+            wget \
+            tar \
+            xz-utils \
+            software-properties-common \
+            aria2
+
+      - name: Install FreeBSD sysroot
+        run: |
+          sudo mkdir -p /usr/local/freebsd-sysroot
+          aria2c -x 4 https://download.freebsd.org/ftp/releases/amd64/13.4-RELEASE/base.txz
+          sudo tar -xJf base.txz -C /usr/local/freebsd-sysroot
+          rm base.txz
+
+      - name: Install osxcross for Darwin builds
+        run: |
+          sudo apt-get install -y \
+            clang \
+            cmake \
+            libxml2-dev \
+            uuid-dev \
+            libssl-dev \
+            zlib1g-dev \
+            libbz2-dev \
+            liblzma-dev
+
+          git clone https://github.com/tpoechtrager/osxcross.git
+          cd osxcross
+          wget -nc https://github.com/phracker/MacOSX-SDKs/releases/download/11.3/MacOSX11.3.sdk.tar.xz
+          mv MacOSX11.3.sdk.tar.xz tarballs/
+          UNATTENDED=1 ./build.sh
+          echo "$(pwd)/target/bin" >> $GITHUB_PATH
+
+      - name: Run make
+        run: make
+
+      - name: Upload artifacts
+        uses: actions/upload-artifact@v4
+        with:
+          name: built-binaries
+          path: bin/
+          retention-days: 5
