@@ -1,8 +1,9 @@
-name: Build
+name: Build and Release
 
 on:
   push: {}
   pull_request: {}
+  workflow_dispatch:
 
 jobs:
   build:
@@ -10,6 +11,8 @@ jobs:
     steps:
       - name: Checkout code
         uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
 
       - name: Set up Go
         uses: actions/setup-go@v4
@@ -70,3 +73,40 @@ jobs:
           name: built-binaries
           path: bin/
           retention-days: 5
+
+      - name: Get tag version (if tag push)
+        if: startsWith(github.ref, 'refs/tags/')
+        id: get_version
+        run: |
+          TAG_VERSION=${GITHUB_REF#refs/tags/}
+          echo "tag_version=$TAG_VERSION" >> $GITHUB_OUTPUT
+          echo "TAG_VERSION=$TAG_VERSION" >> $GITHUB_ENV
+
+  release:
+    if: startsWith(github.ref, 'refs/tags/')
+    needs: [build]
+    runs-on: ubuntu-22.04
+    steps:
+      - name: Download artifacts
+        uses: actions/download-artifact@v4
+        with:
+          name: built-binaries
+          path: bin
+
+      - name: Create GitHub Release
+        uses: softprops/action-gh-release@v2
+        with:
+          tag_name: ${{ needs.build.outputs.tag_version }}
+          name: Release ${{ needs.build.outputs.tag_version }}
+          body: |
+            ## Pre-built binaries
+            - Static libraries (.a files)
+            - Header files (.h files)
+            
+            Built from tag: ${{ needs.build.outputs.tag_version }}
+          files: |
+            bin/*.a
+            bin/*.h
+          generate_release_notes: true
+          draft: false
+          prerelease: false
