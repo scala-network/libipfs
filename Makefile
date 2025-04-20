@@ -1,6 +1,6 @@
 .PHONY: default build clean
 
-VERSION := 3.0.0
+VERSION := 3.0.1
 LIB_NAME := libipfs
 SRC := ./${LIB_NAME}.go
 BIN_DIR := bin
