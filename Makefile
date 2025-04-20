@@ -46,7 +46,7 @@ build_$(1)_$(2):
 	GOOS=$(1) \
 	GOARCH=$(2) \
 	CC=$(call GET_CC,$(1),$(2)) \
-	go build -buildmode=c-archive -o $(BIN_DIR)/${LIB_NAME}-$(1)-$(2).a $(SRC)
+	go build -buildmode=c-archive -ldflags="-s -w" -trimpath -o $(BIN_DIR)/${LIB_NAME}-$(1)-$(2).a $(SRC)
 .PHONY: build_$(1)_$(2)
 endef
 
