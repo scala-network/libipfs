@@ -1,0 +1,84 @@
+cmake_minimum_required(VERSION 3.10)
+project(libipfs_go)
+
+if(APPLE)
+    set(GOOS "darwin")
+elseif(UNIX)
+    if(CMAKE_SYSTEM_NAME MATCHES "FreeBSD")
+        set(GOOS "freebsd")
+    else()
+        set(GOOS "linux")
+    endif()
+elseif(WIN32)
+    set(GOOS "windows")
+else()
+    message(FATAL_ERROR "Unsupported OS")
+endif()
+
+if(NOT DEFINED ARCH_ID)
+  message(FATAL_ERROR "ARCH_ID must be passed from parent")
+endif()
+
+if(DEFINED ARCH_ID)
+  message(STATUS "Using Scala ARCH_ID: ${ARCH_ID}")
+  set(GOARCH_FROM_ARCH_ID ON)
+  if(ARCH_ID STREQUAL "x86_64")
+    set(GOARCH "amd64")
+  elseif(ARCH_ID MATCHES "^(aarch64|arm64|armv8-a)$")
+    set(GOARCH "arm64")
+  elseif(ARCH_ID STREQUAL "riscv64")
+    set(GOARCH "riscv64")
+  else()
+    message("Unsupported ARCH_ID: ${ARCH_ID} DEFAULTING TO amd64")
+    set(GOARCH "amd64")
+  endif()
+else()
+  message(STATUS "Deriving GOARCH from CMAKE_SYSTEM_PROCESSOR")
+  string(TOLOWER "${CMAKE_SYSTEM_PROCESSOR}" SYSTEM_ARCH)
+  message(STATUS "Detected system arch: ${SYSTEM_ARCH}")
+
+  if(SYSTEM_ARCH STREQUAL "x86_64" OR SYSTEM_ARCH STREQUAL "amd64")
+    set(GOARCH "amd64")
+  elseif(SYSTEM_ARCH MATCHES "^(aarch64|arm64|armv8-a)$")
+    set(GOARCH "arm64")
+  elseif(SYSTEM_ARCH STREQUAL "riscv64")
+    set(GOARCH "riscv64")
+  else()
+    message(FATAL_ERROR "Unsupported system processor architecture: ${SYSTEM_ARCH}")
+  endif()
+endif()
+
+set(GO_OUT libipfs-${GOOS}-${GOARCH}.a)
+set(GO_HEADER libipfs.h)
+
+add_custom_command(
+    OUTPUT ${CMAKE_CURRENT_BINARY_DIR}/${GO_OUT} ${CMAKE_CURRENT_BINARY_DIR}/${GO_HEADER}
+    COMMAND ${CMAKE_COMMAND} -E env
+            CGO_ENABLED=1
+            GOOS=${GOOS}
+            GOARCH=${GOARCH}
+            go build
+            -buildmode=c-archive
+            -trimpath
+            -ldflags=-s\ -w
+            -o ${CMAKE_CURRENT_BINARY_DIR}/${GO_OUT}
+            ${CMAKE_CURRENT_SOURCE_DIR}/libipfs.go
+    COMMAND ${CMAKE_COMMAND} -E copy_if_different
+            ${CMAKE_CURRENT_BINARY_DIR}/libipfs-${GOOS}-${GOARCH}.h
+            ${CMAKE_CURRENT_BINARY_DIR}/libipfs.h
+    WORKING_DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}
+    DEPENDS ${CMAKE_CURRENT_SOURCE_DIR}/libipfs.go
+    COMMENT "Building Go IPFS library (${GOOS}/${GOARCH})"
+)
+
+
+add_custom_target(libipfs_build ALL
+    DEPENDS ${CMAKE_CURRENT_BINARY_DIR}/${GO_OUT}
+)
+
+add_library(libipfs STATIC IMPORTED GLOBAL)
+set_target_properties(libipfs PROPERTIES
+    IMPORTED_LOCATION ${CMAKE_CURRENT_BINARY_DIR}/${GO_OUT}
+    INTERFACE_INCLUDE_DIRECTORIES ${CMAKE_CURRENT_BINARY_DIR}
+)
+add_dependencies(libipfs libipfs_build)
