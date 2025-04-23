@@ -3,6 +3,8 @@ project(libipfs_go)
 
 if(APPLE)
     set(GOOS "darwin")
+    find_library(SECURITY_FRAMEWORK Security REQUIRED)
+    find_library(RESOLV_LIBRARY resolv REQUIRED)
 elseif(UNIX)
     if(CMAKE_SYSTEM_NAME MATCHES "FreeBSD")
         set(GOOS "freebsd")
@@ -81,4 +83,11 @@ set_target_properties(libipfs PROPERTIES
     IMPORTED_LOCATION ${CMAKE_CURRENT_BINARY_DIR}/${GO_OUT}
     INTERFACE_INCLUDE_DIRECTORIES ${CMAKE_CURRENT_BINARY_DIR}
 )
+
+if(APPLE)
+  set_target_properties(libipfs PROPERTIES
+    INTERFACE_LINK_LIBRARIES "${SECURITY_FRAMEWORK};${RESOLV_LIBRARY}"
+  )
+endif()
+
 add_dependencies(libipfs libipfs_build)
