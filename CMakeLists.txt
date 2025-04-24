@@ -53,18 +53,58 @@ endif()
 set(GO_OUT libipfs-${GOOS}-${GOARCH}.a)
 set(GO_HEADER libipfs.h)
 
+set(CROSS_CC "")
+if(GOARCH STREQUAL "arm64")
+  set(CROSS_CC "CC=aarch64-linux-gnu-gcc")
+endif()
+
+if(GOARCH STREQUAL "riscv64")
+  set(CROSS_CC "CC=riscv64-linux-gnu-gcc")
+endif()
+
+if(GOOS STREQUAL "windows" AND CMAKE_C_PLATFORM_ID STREQUAL "MinGW")
+  set(CROSS_CC "CC=x86_64-w64-mingw32-gcc-posix")
+endif()
+
+if(APPLE)
+    	if(DEFINED scala_BINARY_DIR AND NOT "${scala_BINARY_DIR}" STREQUAL "")
+		if(DEFINED CMAKE_OSX_SYSROOT)
+			set(CROSS_CC "CC=clang --target=${CLANG_TARGET} --sysroot=${CMAKE_OSX_SYSROOT}")
+		endif()
+	endif()
+endif()
+
+if(FREEBSD)
+    if(DEFINED scala_BINARY_DIR AND NOT "${scala_BINARY_DIR}" STREQUAL "")
+        foreach(path IN LISTS CMAKE_CXX_IMPLICIT_LINK_DIRECTORIES)
+            if("${path}" MATCHES "(.*/native)/usr/lib")
+                set(FREEBSD_SYSROOT "${CMAKE_MATCH_1}")
+                break()
+            endif()
+        endforeach()
+
+        if(DEFINED FREEBSD_SYSROOT)
+            set(CROSS_CC "CC=clang --target=x86_64-unknown-freebsd --sysroot=${FREEBSD_SYSROOT}")
+        else()
+            message(FATAL_ERROR "Could not detect FreeBSD sysroot from CMAKE_CXX_IMPLICIT_LINK_DIRECTORIES")
+        endif()
+    endif()
+endif()
+
 add_custom_command(
     OUTPUT ${CMAKE_CURRENT_BINARY_DIR}/${GO_OUT} ${CMAKE_CURRENT_BINARY_DIR}/${GO_HEADER}
     COMMAND ${CMAKE_COMMAND} -E env
+            ${CROSS_CC}
             CGO_ENABLED=1
             GOOS=${GOOS}
             GOARCH=${GOARCH}
             go build
             -buildmode=c-archive
             -trimpath
-            -ldflags=-s\ -w
+            "-ldflags=-s -w"
             -o ${CMAKE_CURRENT_BINARY_DIR}/${GO_OUT}
             ${CMAKE_CURRENT_SOURCE_DIR}/libipfs.go
+    ${GO_EXTRA_COMMANDS}
     COMMAND ${CMAKE_COMMAND} -E copy_if_different
             ${CMAKE_CURRENT_BINARY_DIR}/libipfs-${GOOS}-${GOARCH}.h
             ${CMAKE_CURRENT_BINARY_DIR}/libipfs.h
@@ -72,7 +112,6 @@ add_custom_command(
     DEPENDS ${CMAKE_CURRENT_SOURCE_DIR}/libipfs.go
     COMMENT "Building Go IPFS library (${GOOS}/${GOARCH})"
 )
-
 
 add_custom_target(libipfs_build ALL
     DEPENDS ${CMAKE_CURRENT_BINARY_DIR}/${GO_OUT}
@@ -87,6 +126,10 @@ set_target_properties(libipfs PROPERTIES
 if(APPLE)
   set_target_properties(libipfs PROPERTIES
     INTERFACE_LINK_LIBRARIES "${SECURITY_FRAMEWORK};${RESOLV_LIBRARY}"
+  )
+elseif(UNIX AND NOT FREEBSD)
+  set_target_properties(libipfs PROPERTIES
+    INTERFACE_LINK_LIBRARIES "resolv"
   )
 endif()
 
