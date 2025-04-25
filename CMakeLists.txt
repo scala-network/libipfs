@@ -54,17 +54,20 @@ set(GO_OUT libipfs-${GOOS}-${GOARCH}.a)
 set(GO_HEADER libipfs.h)
 
 set(CROSS_CC "")
-if(GOARCH STREQUAL "arm64")
-  set(CROSS_CC "CC=aarch64-linux-gnu-gcc")
-endif()
 
-if(GOARCH STREQUAL "riscv64")
-  set(CROSS_CC "CC=riscv64-linux-gnu-gcc")
-endif()
-
-if(GOOS STREQUAL "windows" AND CMAKE_C_PLATFORM_ID STREQUAL "MinGW")
-  set(CROSS_CC "CC=x86_64-w64-mingw32-gcc-posix")
-endif()
+if(DEPENDS)
+	if(GOARCH STREQUAL "arm64")
+	  set(CROSS_CC "CC=aarch64-linux-gnu-gcc")
+	endif()
+	
+	if(GOARCH STREQUAL "riscv64")
+	  set(CROSS_CC "CC=riscv64-linux-gnu-gcc")
+	endif()
+	
+	if(GOOS STREQUAL "windows" AND CMAKE_C_PLATFORM_ID STREQUAL "MinGW")
+	  set(CROSS_CC "CC=x86_64-w64-mingw32-gcc-posix")
+	endif()
+ endif()
 
 if(APPLE)
     	if(DEFINED scala_BINARY_DIR AND NOT "${scala_BINARY_DIR}" STREQUAL "")
