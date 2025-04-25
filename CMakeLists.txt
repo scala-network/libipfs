@@ -128,6 +128,13 @@ set_target_properties(libipfs PROPERTIES
     INTERFACE_INCLUDE_DIRECTORIES ${CMAKE_CURRENT_BINARY_DIR}
 )
 
+if(APPLE AND DEPENDS)
+    add_custom_command(TARGET libipfs_build POST_BUILD
+        COMMAND ${CMAKE_RANLIB} ${CMAKE_CURRENT_BINARY_DIR}/${GO_OUT}
+        COMMENT "Running ranlib on Darwin archive to generate symbol table"
+    )
+endif()
+
 if(APPLE)
   set_target_properties(libipfs PROPERTIES
     INTERFACE_LINK_LIBRARIES "${SECURITY_FRAMEWORK};${RESOLV_LIBRARY}"
