@@ -1,6 +1,6 @@
-.PHONY: default build clean
+.PHONY: default build clean test
 
-VERSION := 3.0.1
+VERSION := 4.0.0
 LIB_NAME := libipfs
 SRC := ./${LIB_NAME}.go
 BIN_DIR := bin
@@ -27,9 +27,13 @@ CC_COMPILERS := \
 # Default target
 default: build
 
+# Test target
+test:
+	go test ./... -timeout 300s
+
 # Clean target
 clean:
-	rm -rf $(BIN_DIR)/ && mkdir -p $(BIN_DIR) && cp -rf example.cpp $(BIN_DIR)/
+	rm -rf $(BIN_DIR)/ && mkdir -p $(BIN_DIR) && cp -rf examples/example.cpp $(BIN_DIR)/
 
 # Function to get the cross-compiler based on GOOS/GOARCH
 define GET_CC

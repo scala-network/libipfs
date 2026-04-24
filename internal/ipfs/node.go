@@ -6,6 +6,7 @@ import (
 	"io"
 	"os"
 	"path/filepath"
+	"sync"
 	"time"
 
 	"github.com/scala-network/libipfs/internal"
@@ -21,21 +22,31 @@ import (
 	"github.com/ipfs/kubo/repo/fsrepo"
 )
 
+var loadPluginsOnce sync.Once
+var loadPluginsErr error
+
+func setupPlugins(repoPath string) error {
+	loadPluginsOnce.Do(func() {
+		plugins, err := loader.NewPluginLoader(filepath.Join(repoPath, "plugins"))
+		if err != nil {
+			loadPluginsErr = err
+			return
+		}
+		if err = plugins.Initialize(); err != nil {
+			loadPluginsErr = err
+			return
+		}
+		loadPluginsErr = plugins.Inject()
+	})
+	return loadPluginsErr
+}
+
 func CreateRepo(repoPath string, bindPort int, bindIps []string) error {
 	if !utils.IsValidPort(bindPort) {
 		return fmt.Errorf("invalid port")
 	}
 
-	plugins, err := loader.NewPluginLoader(filepath.Join(repoPath, "plugins"))
-	if err != nil {
-		return err
-	}
-
-	if err := plugins.Initialize(); err != nil {
-		return err
-	}
-
-	if err := plugins.Inject(); err != nil {
+	if err := setupPlugins(repoPath); err != nil {
 		return err
 	}
 

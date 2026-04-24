@@ -17,16 +17,20 @@ func Pin(node *core.IpfsNode, api coreiface.CoreAPI, toPin string) error {
 }
 
 func ListPinned(node *core.IpfsNode, api coreiface.CoreAPI) ([]string, error) {
-	pins, err := api.Pin().Ls(node.Context())
-
-	if err != nil {
-		return nil, err
-	}
-
+	pinCh := make(chan coreiface.Pin, 1)
 	var pinned []string
 
-	for pin := range pins {
+	errCh := make(chan error, 1)
+	go func() {
+		errCh <- api.Pin().Ls(node.Context(), pinCh)
+	}()
+
+	for pin := range pinCh {
 		pinned = append(pinned, pin.Path().String())
+	}
+
+	if err := <-errCh; err != nil {
+		return nil, err
 	}
 
 	return pinned, nil

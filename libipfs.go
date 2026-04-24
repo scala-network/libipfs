@@ -15,8 +15,8 @@ import (
 )
 
 type Result struct {
-	Status string
-	Data   interface{} `json:",omitempty"`
+	Status string      `json:"status"`
+	Data   interface{} `json:"data,omitempty"`
 }
 
 var (

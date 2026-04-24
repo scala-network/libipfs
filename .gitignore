@@ -1,5 +1,23 @@
+# Build outputs
 bin/
-example/.libipfs-repo/
-example/libipfs-*
-example/test-download.jpg
+
+# IPFS repo data created at runtime
+*.libipfs-repo/
+ipfs/
+
+# Downloaded/fetched files from examples
+examples/downloaded.*
+examples/test-download.*
+
+# Editor
 .vscode/
+
+# Go build cache / test artifacts
+*.test
+*.out
+
+# CGO shared library outputs that land in repo root
+libipfs
+libipfs.h
+libipfs-*.h
+libipfs-*.a
