@@ -53,52 +53,51 @@ endif()
 set(GO_OUT libipfs-${GOOS}-${GOARCH}.a)
 set(GO_HEADER libipfs.h)
 
+set(CROSS_ENV "")
 set(CROSS_CC "")
 
 if(DEPENDS)
-	if(GOARCH STREQUAL "arm64")
+	if(GOARCH STREQUAL "arm64" AND NOT APPLE)
 	  set(CROSS_CC "CC=aarch64-linux-gnu-gcc")
 	endif()
-	
+
 	if(GOARCH STREQUAL "riscv64")
 	  set(CROSS_CC "CC=riscv64-linux-gnu-gcc")
 	endif()
-	
+
 	if(GOOS STREQUAL "windows" AND CMAKE_C_PLATFORM_ID STREQUAL "MinGW")
 	  set(CROSS_CC "CC=x86_64-w64-mingw32-gcc-posix")
 	endif()
- endif()
-
-if(APPLE)
-    	if(DEFINED scala_BINARY_DIR AND NOT "${scala_BINARY_DIR}" STREQUAL "")
-		if(DEFINED CMAKE_OSX_SYSROOT)
-  			if(DEPENDS)
-				set(CROSS_CC "CC=clang --target=${CLANG_TARGET} --sysroot=${CMAKE_OSX_SYSROOT}")
-    			endif()
-		endif()
-	endif()
 endif()
 
-if(FREEBSD)
-    if(DEFINED scala_BINARY_DIR AND NOT "${scala_BINARY_DIR}" STREQUAL "")
-        foreach(path IN LISTS CMAKE_CXX_IMPLICIT_LINK_DIRECTORIES)
-            if("${path}" MATCHES "(.*/native)/usr/lib")
-                set(FREEBSD_SYSROOT "${CMAKE_MATCH_1}")
-                break()
-            endif()
-        endforeach()
+if(APPLE AND DEPENDS)
+	set(CROSS_CC "CC=clang --target=${CLANG_TARGET} --sysroot=${CMAKE_OSX_SYSROOT}")
+	set(CROSS_ENV "${CROSS_ENV} MACOSX_DEPLOYMENT_TARGET=${CMAKE_OSX_DEPLOYMENT_TARGET}")
+	set(CROSS_ENV "${CROSS_ENV} CGO_CFLAGS=--target=${CLANG_TARGET} -mmacosx-version-min=${CMAKE_OSX_DEPLOYMENT_TARGET} --sysroot=${CMAKE_OSX_SYSROOT}")
+	set(CROSS_ENV "${CROSS_ENV} CGO_LDFLAGS=-mmacosx-version-min=${CMAKE_OSX_DEPLOYMENT_TARGET} --sysroot=${CMAKE_OSX_SYSROOT}")
+	set(SECURITY_FRAMEWORK "-framework Security")
+	set(RESOLV_LIBRARY "-lresolv")
+endif()
 
-        if(DEFINED FREEBSD_SYSROOT)
-            set(CROSS_CC "CC=clang --target=x86_64-unknown-freebsd --sysroot=${FREEBSD_SYSROOT}")
-        else()
-            message(FATAL_ERROR "Could not detect FreeBSD sysroot from CMAKE_CXX_IMPLICIT_LINK_DIRECTORIES")
-        endif()
-    endif()
+if(FREEBSD AND DEPENDS)
+	foreach(path IN LISTS CMAKE_CXX_IMPLICIT_LINK_DIRECTORIES)
+		if("${path}" MATCHES "(.*/native)/usr/lib")
+			set(FREEBSD_SYSROOT "${CMAKE_MATCH_1}")
+			break()
+		endif()
+	endforeach()
+
+	if(DEFINED FREEBSD_SYSROOT)
+		set(CROSS_CC "CC=clang --target=x86_64-unknown-freebsd --sysroot=${FREEBSD_SYSROOT}")
+	else()
+		message(FATAL_ERROR "Could not detect FreeBSD sysroot from CMAKE_CXX_IMPLICIT_LINK_DIRECTORIES")
+	endif()
 endif()
 
 add_custom_command(
     OUTPUT ${CMAKE_CURRENT_BINARY_DIR}/${GO_OUT} ${CMAKE_CURRENT_BINARY_DIR}/${GO_HEADER}
     COMMAND ${CMAKE_COMMAND} -E env
+            ${CROSS_ENV}
             ${CROSS_CC}
             CGO_ENABLED=1
             GOOS=${GOOS}
