@@ -137,6 +137,7 @@ endif()
 if(APPLE)
   set_target_properties(libipfs PROPERTIES
     INTERFACE_LINK_LIBRARIES "${SECURITY_FRAMEWORK};${RESOLV_LIBRARY}"
+    INTERFACE_LINK_OPTIONS "-framework;Security;-lresolv"
   )
 elseif(UNIX AND NOT FREEBSD)
   set_target_properties(libipfs PROPERTIES
